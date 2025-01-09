@@ -3,7 +3,8 @@ name = "bitcoin-bosd"
 version = "0.0.0"
 edition = "2021"
 authors = [
-  "Trey Del Bonis <trey@alpenlabs.io>, Jose Storopoli <jose@alpenlabs.io>",
+  "Trey Del Bonis <trey@alpenlabs.io>",
+  "Jose Storopoli <jose@alpenlabs.io>",
 ]
 description = "Rust implementation of a Bitcoin binary output script descriptor (BOSD)"
 license = "MIT OR Apache-2.0"
