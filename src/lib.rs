@@ -4,7 +4,7 @@
 //! a 1-byte type tag followed by a cryptographic payload.
 //! The format is designed to be compact
 //! and efficiently represent standard Bitcoin output types:
-//! 
+//!
 //! | Type | Payload Len | Payload Interpretation |
 //! | ---- | ----------- | ---------------------- |
 //! | 0    | ..=80       | `OP_RETURN` payload    |
@@ -14,17 +14,14 @@
 //! | 3    | 32          | P2WSH hash             |
 //! | 4    | 32          | P2TR X-only PubKey     |
 
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
-}
+#[cfg(feature = "address")]
+pub mod address;
+#[cfg(feature = "borsh")]
+pub mod borsh;
+pub mod descriptor;
+pub mod error;
+#[cfg(feature = "serde")]
+pub mod serde;
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
-    }
-}
+pub use descriptor::{Descriptor, DescriptorType};
+pub use error::DescriptorError;
