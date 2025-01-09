@@ -55,6 +55,7 @@ impl<'a> Descriptor<'a> {
 ///
 /// This is the first byte of the payload.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[non_exhaustive] // Might need more in the future.
 pub enum DescriptorType {
     /// `OP_RETURN` payload.
     OpReturn,
@@ -118,5 +119,56 @@ impl DescriptorType {
             5 => Ok(DescriptorType::P2tr),
             _ => Err(DescriptorError::InvalidDescriptorType(byte)),
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn descriptor_from_bytes() {
+        let bytes = [0, 1, 2, 3, 4, 5];
+        let descriptor = Descriptor::from_bytes(&bytes).unwrap();
+        assert_eq!(descriptor.type_tag(), DescriptorType::OpReturn);
+        assert_eq!(descriptor.payload(), &[1, 2, 3, 4, 5]);
+    }
+
+    #[test]
+    fn descriptor_from_bytes_invalid() {
+        let bytes = [6, 1, 2, 3, 4, 5, 6];
+        assert!(Descriptor::from_bytes(&bytes).is_err());
+    }
+
+    #[test]
+    fn descriptor_type() {
+        assert_eq!(DescriptorType::OpReturn.to_u8(), 0);
+        assert_eq!(DescriptorType::P2pkh.to_u8(), 1);
+        assert_eq!(DescriptorType::P2sh.to_u8(), 2);
+        assert_eq!(DescriptorType::P2wpkh.to_u8(), 3);
+        assert_eq!(DescriptorType::P2wsh.to_u8(), 4);
+        assert_eq!(DescriptorType::P2tr.to_u8(), 5);
+
+        assert_eq!(
+            DescriptorType::from_u8(0).unwrap(),
+            DescriptorType::OpReturn
+        );
+        assert_eq!(DescriptorType::from_u8(1).unwrap(), DescriptorType::P2pkh);
+        assert_eq!(DescriptorType::from_u8(2).unwrap(), DescriptorType::P2sh);
+        assert_eq!(DescriptorType::from_u8(3).unwrap(), DescriptorType::P2wpkh);
+        assert_eq!(
+            DescriptorType::from_u8(4).unwrap(), // P2WSH
+            DescriptorType::P2wsh
+        );
+        assert_eq!(
+            DescriptorType::from_u8(5).unwrap(), // P2TR
+            DescriptorType::P2tr
+        );
+    }
+
+    #[test]
+    fn invalid_descriptor_type() {
+        assert!(DescriptorType::from_u8(6).is_err());
+        assert!(DescriptorType::from_u8(7).is_err());
     }
 }
