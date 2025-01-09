@@ -7,7 +7,7 @@ use bitcoin::{Address, ScriptBuf};
 
 use crate::{Descriptor, DescriptorError};
 
-impl Descriptor<'_> {
+impl Descriptor {
     pub fn to_address(&self) -> Result<Address, DescriptorError> {
         todo!()
     }

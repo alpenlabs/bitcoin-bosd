@@ -4,6 +4,13 @@
 //!
 //! The main type is [`Descriptor`].
 
+use std::{
+    fmt::{Display, Formatter},
+    str::FromStr,
+};
+
+use hex::{DisplayHex, FromHex};
+
 use crate::error::DescriptorError;
 
 /// A Bitcoin Output Script Descriptor (BOSD).
@@ -16,19 +23,20 @@ use crate::error::DescriptorError;
 /// See [the Bitcoin developer guide on Transactions](https://developer.bitcoin.org/devguide/transactions.html)
 /// for more information on standardness.
 #[derive(Debug, Clone, PartialEq, Eq)]
-pub struct Descriptor<'a> {
+#[repr(C)]
+pub struct Descriptor {
     /// The type of the descriptor.
     type_tag: DescriptorType,
 
     /// The actual underlying data.
-    payload: &'a [u8],
+    payload: Vec<u8>,
 }
 
-impl<'a> Descriptor<'a> {
+impl Descriptor {
     /// Constructs a new [`Descriptor`] from a byte slice.
-    pub fn from_bytes(bytes: &'a [u8]) -> Result<Self, DescriptorError> {
+    pub fn from_bytes(bytes: &[u8]) -> Result<Self, DescriptorError> {
         let type_tag = DescriptorType::from_u8(bytes[0])?;
-        let payload = &bytes[1..];
+        let payload = bytes[1..].to_vec();
         Ok(Self { type_tag, payload })
     }
 
@@ -47,7 +55,22 @@ impl<'a> Descriptor<'a> {
     /// or as a Bitcoin script by using [`Descriptor::to_script_pubkey`] in
     /// the case of an `OP_RETURN` payload.
     pub fn payload(&self) -> &[u8] {
-        self.payload
+        self.payload.as_slice()
+    }
+}
+
+impl Display for Descriptor {
+    fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
+        write!(f, "{}", self.payload.as_hex())
+    }
+}
+
+impl FromStr for Descriptor {
+    type Err = DescriptorError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let bytes = Vec::from_hex(s)?;
+        Self::from_bytes(&bytes)
     }
 }
 

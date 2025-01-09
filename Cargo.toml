@@ -13,6 +13,7 @@ readme = "README.md"
 [dependencies]
 bitcoin = { version = "0.32.5", optional = true }
 borsh = { version = "1.5.3", optional = true }
+hex = { package = "hex-conservative", version = "0.2.1" } # for optimization keep in sync with bitcoin
 serde = { version = "1.0.217", optional = true }
 thiserror = "2.0.10"
 

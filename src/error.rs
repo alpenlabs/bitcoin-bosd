@@ -1,5 +1,6 @@
 //! Error types for the Bitcoin BOSD library.
 
+use hex::error::HexToBytesError;
 use thiserror::Error;
 
 /// Errors related to [`Descriptor`](crate::Descriptor).
@@ -8,4 +9,8 @@ pub enum DescriptorError {
     /// Invalid descriptor type tag.
     #[error("invalid descriptor type tag: {0}")]
     InvalidDescriptorType(u8),
+
+    /// Hex decoding error.
+    #[error("hex decoding error: {0}")]
+    HexDecodingError(#[from] HexToBytesError),
 }
