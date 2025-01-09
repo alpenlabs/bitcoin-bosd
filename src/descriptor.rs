@@ -13,6 +13,24 @@ use hex::{DisplayHex, FromHex};
 
 use crate::error::DescriptorError;
 
+/// Maximum length of `OP_RETURN` payload.
+pub(crate) const MAX_OP_RETURN_LEN: usize = 80;
+
+/// Exact length of P2PKH payload.
+pub(crate) const P2PKH_LEN: usize = 20;
+
+/// Exact length of P2SH payload.
+pub(crate) const P2SH_LEN: usize = 20;
+
+/// Exact length of P2WPKH payload.
+pub(crate) const P2WPKH_LEN: usize = 20;
+
+/// Exact length of P2WSH payload.
+pub(crate) const P2WSH_LEN: usize = 32;
+
+/// Exact length of P2TR payload.
+pub(crate) const P2TR_LEN: usize = 32;
+
 /// A Bitcoin Output Script Descriptor (BOSD).
 ///
 /// This is a compact binary format consisting of
@@ -37,7 +55,59 @@ impl Descriptor {
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, DescriptorError> {
         let type_tag = DescriptorType::from_u8(bytes[0])?;
         let payload = bytes[1..].to_vec();
-        Ok(Self { type_tag, payload })
+        match type_tag {
+            // OP_RETURN should be less than 80 bytes.
+            DescriptorType::OpReturn => {
+                let payload_len = payload.len();
+                if payload_len > MAX_OP_RETURN_LEN {
+                    Err(DescriptorError::InvalidPayloadLength(payload_len))
+                } else {
+                    Ok(Self { type_tag, payload })
+                }
+            }
+            // P2PKH, P2SH, P2WPKH should be all 20 bytes.
+            DescriptorType::P2pkh => {
+                let payload_len = payload.len();
+                if payload_len != P2PKH_LEN {
+                    Err(DescriptorError::InvalidPayloadLength(payload_len))
+                } else {
+                    Ok(Self { type_tag, payload })
+                }
+            }
+            DescriptorType::P2sh => {
+                let payload_len = payload.len();
+                if payload_len != P2SH_LEN {
+                    Err(DescriptorError::InvalidPayloadLength(payload_len))
+                } else {
+                    Ok(Self { type_tag, payload })
+                }
+            }
+            DescriptorType::P2wpkh => {
+                let payload_len = payload.len();
+                if payload_len != P2WPKH_LEN {
+                    Err(DescriptorError::InvalidPayloadLength(payload_len))
+                } else {
+                    Ok(Self { type_tag, payload })
+                }
+            }
+            // P2WSH and P2TR should be all 32 bytes.
+            DescriptorType::P2wsh => {
+                let payload_len = payload.len();
+                if payload_len != P2WSH_LEN {
+                    Err(DescriptorError::InvalidPayloadLength(payload_len))
+                } else {
+                    Ok(Self { type_tag, payload })
+                }
+            }
+            DescriptorType::P2tr => {
+                let payload_len = payload.len();
+                if payload_len != P2TR_LEN {
+                    Err(DescriptorError::InvalidPayloadLength(payload_len))
+                } else {
+                    Ok(Self { type_tag, payload })
+                }
+            }
+        }
     }
 
     /// Returns the type tag of the descriptor.
@@ -159,7 +229,21 @@ mod tests {
 
     #[test]
     fn descriptor_from_bytes_invalid() {
+        // Invalid type tag
         let bytes = [6, 1, 2, 3, 4, 5, 6];
+        assert!(Descriptor::from_bytes(&bytes).is_err());
+
+        // Invalid payload length
+        // OP_RETURN with 81 bytes
+        let bytes = [0; 82];
+        assert!(Descriptor::from_bytes(&bytes).is_err());
+
+        // P2PKH with 19 bytes
+        let bytes = [1; 20];
+        assert!(Descriptor::from_bytes(&bytes).is_err());
+
+        // P2TR with 33 bytes
+        let bytes = [5; 34];
         assert!(Descriptor::from_bytes(&bytes).is_err());
     }
 

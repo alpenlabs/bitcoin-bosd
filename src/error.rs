@@ -10,6 +10,10 @@ pub enum DescriptorError {
     #[error("invalid descriptor type tag: {0}")]
     InvalidDescriptorType(u8),
 
+    /// Invalid payload length.
+    #[error("invalid payload length: {0}")]
+    InvalidPayloadLength(usize),
+
     /// Hex decoding error.
     #[error("hex decoding error: {0}")]
     HexDecodingError(#[from] HexToBytesError),
