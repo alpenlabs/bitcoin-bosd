@@ -70,7 +70,7 @@ impl Descriptor {
         let type_tag = self.type_tag();
         match type_tag {
             OpReturn => {
-                // NOTE: We cannot do the canonycal construction using
+                // NOTE: We cannot do the canonical construction using
                 //       `ScriptBuf::push_slice(payload)` since it needs the
                 //       damn payload to be Sized.
                 //       There's no way to construct this using Rust
