@@ -174,9 +174,9 @@ impl Descriptor {
     ///
     /// # Warning
     ///
-    /// It is not advisabled to use this method.
-    /// Instead, try to parse it as either as a Bitcoin address
-    /// by using [`Descriptor::to_address`] in the case of a address,
+    /// It is not advisable to use this method.
+    /// Instead, try to parse it either as a Bitcoin address
+    /// by using [`Descriptor::to_address`] in the case of an address,
     /// or as a Bitcoin script by using [`Descriptor::to_script`] in
     /// the case of an `OP_RETURN` payload.
     pub fn payload(&self) -> &[u8] {

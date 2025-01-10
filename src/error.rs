@@ -31,7 +31,7 @@ pub enum DescriptorError {
 
     /// Invalid [`Address`](bitcoin::Address) conversion.
     ///
-    /// Currently only suscetible for `OP_RETURN` descriptors
+    /// Currently only susceptible for `OP_RETURN` descriptors
     /// being converted to a bitcoin address.
     #[cfg(feature = "address")]
     #[error("{0:?} cannot be converted to a bitcoin address")]
