@@ -169,7 +169,7 @@ impl Descriptor {
     /// It is not advisabled to use this method.
     /// Instead, try to parse it as either as a Bitcoin address
     /// by using [`Descriptor::to_address`] in the case of a address,
-    /// or as a Bitcoin script by using [`Descriptor::to_script_pubkey`] in
+    /// or as a Bitcoin script by using [`Descriptor::to_script`] in
     /// the case of an `OP_RETURN` payload.
     pub fn payload(&self) -> &[u8] {
         self.payload.as_slice()
