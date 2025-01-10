@@ -1,4 +1,4 @@
-# Strata
+# Bitcoin Output Script Descriptor (BOSD)
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache-blue.svg)](https://opensource.org/licenses/apache-2-0)
@@ -30,6 +30,16 @@ and efficiently represent standard Bitcoin output types:
 | 3    | 32          | P2WSH hash             |
 | 4    | 32          | P2TR X-only PubKey     |
 
+## Examples
+
+- SegWit V0 (P2WPKH) bech32 mainnet address given a 20-byte public key hash:
+  `034d6151263d87371392bb1b60405392c5ba2e3297` $\iff$ `bc1qf4s4zf3asum38y4mrdsyq5ujckazuv5hczg979`
+- SegWit V1 (P2TR) bech32m mainnet address given a 32-byte X-only public key:
+  `041234123412341234123412341234123412341234123412341234123412341234`
+  $\iff$ `bc1pzg6pydqjxsfrgy35zg6pydqjxsfrgy35zg6pydqjxsfrgy35zg6qf6d5se`
+- `OP_RETURN` payload given a hex string that is less than 80 bytes:
+  `00deadbeefcafebabe` $\iff$ `RETURN PUSHDATA(deadbeefcafebabe)`
+
 ## Usage
 
 ```rust
@@ -49,6 +59,52 @@ let script = desc.to_script()?;
 let json = serde_json::to_string(&amp)?;
 let borsh_bytes = borsh::to_vec(&amp)?;
 ```
+
+## Rationale
+
+There doesn't exist any general standard way to encode arbitrary relay-safe
+outputs. But we want to support creating a wide range of output types
+(any address and also `OP_RETURN`s) in withdrawal outputs.
+
+While we can solve this using
+(note that we're referring to
+[`rust-bitcoin`](https://github.com/rust-bitcoin/rust-bitcoin/)
+types)
+
+- `Address` + something extra for `OP_RETURN`:
+  The main issue with this is that it's inefficient since it involves linear
+  overhead for the error correction, plus some constant overhead for the network
+  tag and other framing bytes (like `1` in bech32). There's also some debate that
+  could be had over how `OP_RETURN` ought to work here.
+
+  `Address` is a user-facing type that represents a decoded form of what's
+  represented by _addresses_ specifically, but we're looking for something that
+  represents that gets included in transactions.
+
+  We would _like_ to use something like `AddressData`, but this is more of an
+  internal type and doesn't have any serializable representation.
+
+- Use `ScriptBuf` directly:
+  This permits non-standard outputs which aren't relay-safe. We want to constrain
+  ourselves to standard outputs as that could result in users having a hard
+  time getting a non-standard transaction included. This could be seen as a griefing
+  attack.
+
+  We could constrain ourselves to only permit a subset of `ScriptBuf`s, but this
+  is messy and feels like it runs afoul of the "parse don't validate" principle
+  that Rust and other strong-typed languages encourages.
+
+  It can also be a very serious footgun to easily lose funds by sending them
+  into the unrecoverable void.
+
+### Design Requirements
+
+So looking at these constraints we can say that we have these requirements:
+
+- must not involve error correction/detection overheads;
+- must not include network-related data that's redundant based on context; and
+- is a bijection with some sane "relay safe subset" of `ScriptBuf`s,
+  corresponding to both textual addresses and including `OP_RETURN`s.
 
 ## Contributing
 
