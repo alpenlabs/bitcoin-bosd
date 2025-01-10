@@ -70,15 +70,26 @@ impl Descriptor {
         let type_tag = self.type_tag();
         match type_tag {
             OpReturn => {
-                todo!()
-                // let payload = self.payload();
-                // let fixed_payload = to_sized_array!(payload);
-                // let script = ScriptBuf::builder()
-                //     .push_opcode(OP_RETURN)
-                //     .push_slice(&to_sized_array!(payload))
-                //     .into_script();
-                // assert!(script.is_op_return());
-                // script
+                // NOTE: We cannot do the canonycal construction using
+                //       `ScriptBuf::push_slice(payload)` since it needs the
+                //       damn payload to be Sized.
+                //       There's no way to construct this using Rust
+                //       safe or unsafe from an runtime-only known payload.
+                //
+                //       This is safe because we can only construct an `OP_RETURN`
+                //       `Descriptor` that has a length of maximum 80 bytes.
+                //
+                //       The construction is:
+                //       - OP_RETURN
+                //       - payload length
+                //       - payload
+                let payload = self.payload();
+                let payload_len = payload.len() as u8;
+                let op_return = OP_RETURN.to_u8();
+                let bytes = [&[op_return], &[payload_len], payload].concat();
+                let script = ScriptBuf::from_bytes(bytes);
+                assert!(script.is_op_return());
+                script
             }
             P2pkh => {
                 fixed_bytes!(20);
