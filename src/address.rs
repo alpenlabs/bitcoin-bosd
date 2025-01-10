@@ -12,7 +12,11 @@ use bitcoin::{
     WitnessVersion, XOnlyPublicKey,
 };
 
-use crate::{fixed_bytes, Descriptor, DescriptorError, DescriptorType::*};
+use crate::{
+    descriptor::{P2PKH_TYPE_TAG, P2SH_TYPE_TAG, P2TR_TYPE_TAG, P2WPKH_P2WSH_TYPE_TAG},
+    fixed_bytes, Descriptor, DescriptorError,
+    DescriptorType::*,
+};
 
 impl Descriptor {
     /// Converts the [`Descriptor`] to a Bitcoin [`Address`]
@@ -142,19 +146,17 @@ impl From<Address> for Descriptor {
         match address_data {
             // P2PKH
             AddressData::P2pkh { pubkey_hash } => {
-                let type_tag = [1u8];
                 let payload = pubkey_hash.as_raw_hash().to_byte_array();
                 let mut bytes = [0u8; 21];
-                bytes[0] = type_tag[0];
+                bytes[0] = P2PKH_TYPE_TAG;
                 bytes[1..].copy_from_slice(&payload);
                 Descriptor::from_bytes(&bytes).expect("infallible")
             }
             // P2SH
             AddressData::P2sh { script_hash } => {
-                let type_tag = [2u8];
                 let payload = script_hash.as_raw_hash().to_byte_array();
                 let mut bytes = [0u8; 21];
-                bytes[0] = type_tag[0];
+                bytes[0] = P2SH_TYPE_TAG;
                 bytes[1..].copy_from_slice(&payload);
                 Descriptor::from_bytes(&bytes).expect("infallible")
             }
@@ -166,17 +168,15 @@ impl From<Address> for Descriptor {
                     match payload_len {
                         // P2WPKH: 20 bytes
                         20 => {
-                            let type_tag = [3u8];
                             let mut bytes = [0u8; 21];
-                            bytes[0] = type_tag[0];
+                            bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                             bytes[1..].copy_from_slice(payload);
                             Descriptor::from_bytes(&bytes).expect("infallible")
                         }
                         // P2WSH: 32 bytes
                         32 => {
-                            let type_tag = [3u8];
                             let mut bytes = [0u8; 33];
-                            bytes[0] = type_tag[0];
+                            bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                             bytes[1..].copy_from_slice(payload);
                             Descriptor::from_bytes(&bytes).expect("infallible")
                         }
@@ -187,9 +187,8 @@ impl From<Address> for Descriptor {
                 // P2TR: 32 bytes
                 WitnessVersion::V1 => {
                     let x_only_pk = witness_program.program().as_bytes();
-                    let type_tag = [4u8];
                     let mut bytes = [0u8; 33];
-                    bytes[0] = type_tag[0];
+                    bytes[0] = P2TR_TYPE_TAG;
                     bytes[1..].copy_from_slice(x_only_pk);
                     Descriptor::from_bytes(&bytes).expect("infallible")
                 }
@@ -206,7 +205,7 @@ impl From<ScriptHash> for Descriptor {
     fn from(script_hash: ScriptHash) -> Self {
         let payload: &[u8; 20] = script_hash.as_ref();
         let mut bytes = [0u8; 21];
-        bytes[0] = 0x02;
+        bytes[0] = P2SH_TYPE_TAG;
         bytes[1..].copy_from_slice(payload);
         Descriptor::from_bytes(&bytes).expect("infallible")
     }
@@ -223,14 +222,14 @@ impl From<WitnessProgram> for Descriptor {
                     // P2WPKH: 20-bytes
                     20 => {
                         let mut bytes = [0u8; 21];
-                        bytes[0] = 0x03;
+                        bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
                         Descriptor::from_bytes(&bytes).expect("infallible")
                     }
                     // P2WSH: 32-bytes
                     32 => {
                         let mut bytes = [0u8; 33];
-                        bytes[0] = 0x03;
+                        bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
                         Descriptor::from_bytes(&bytes).expect("infallible")
                     }
@@ -241,7 +240,7 @@ impl From<WitnessProgram> for Descriptor {
             // V1 is SegWit 32-bytes P2TR
             WitnessVersion::V1 => {
                 let mut bytes = [0u8; 33];
-                bytes[0] = 0x04;
+                bytes[0] = P2TR_TYPE_TAG;
                 bytes[1..].copy_from_slice(payload);
                 Descriptor::from_bytes(&bytes).expect("infallible")
             }
@@ -267,7 +266,7 @@ impl From<TweakedPublicKey> for Descriptor {
         // NOTE: Guaranteed to have 32 bytes.
         let payload = tweaked_pubkey.serialize();
         let mut bytes = [0u8; 33];
-        bytes[0] = 0x04;
+        bytes[0] = P2TR_TYPE_TAG;
         bytes[1..].copy_from_slice(&payload);
         Descriptor::from_bytes(&bytes).expect("infallible")
     }
