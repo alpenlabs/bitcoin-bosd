@@ -56,8 +56,9 @@ let address = desc.to_address(Network::Bitcoin)?;
 let script = desc.to_script()?;
 
 // Serialize/deserialize
-let json = serde_json::to_string(&amp)?;
-let borsh_bytes = borsh::to_vec(&amp)?;
+let json = serde_json::to_string(&desc)?;
+let serde_bytes = serde_json::to_vec(&desc)?;
+let borsh_bytes = borsh::to_vec(&desc)?;
 ```
 
 ## Rationale
