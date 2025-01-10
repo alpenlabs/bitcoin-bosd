@@ -70,8 +70,16 @@ pub struct Descriptor {
 impl Descriptor {
     /// Constructs a new [`Descriptor`] from a byte slice.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, DescriptorError> {
-        let type_tag = bytes[0];
-        let payload = bytes[1..].to_vec();
+        // We must have at least a type tag
+        let type_tag = *bytes.first().ok_or(DescriptorError::MissingTypeTag)?;
+
+        // Extract the payload, which could be empty
+        let payload = match bytes.get(1..) {
+            Some(payload) => payload.to_vec(),
+            None => Vec::new(),
+        };
+
+        // Validate the payload length against the type
         match type_tag {
             // OP_RETURN should be less than 80 bytes.
             OP_RETURN_TYPE_TAG => {
@@ -313,6 +321,18 @@ mod tests {
 
     #[test]
     fn descriptor_from_bytes_invalid() {
+        // Empty byte slice
+        let bytes = [];
+        assert!(Descriptor::from_bytes(&bytes).is_err());
+
+        // Only tag type byte
+        for tag in 0..=u8::MAX {
+            let bytes = [tag];
+
+            // An empty payload is currently invalid for all types
+            assert!(Descriptor::from_bytes(&bytes).is_err());
+        }
+
         // Invalid type tag
         let bytes = [5, 1, 2, 3, 4, 5, 6];
         assert!(Descriptor::from_bytes(&bytes).is_err());
