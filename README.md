@@ -44,13 +44,13 @@ and efficiently represent standard Bitcoin output types:
 
 ```rust
 use bitcoin::Network;
-use bosd::Descriptor;
+use bitcoin_bosd::Descriptor;
 
 // Parse from binary
 let desc = Descriptor::from_bytes(&[0x04, /* 32 bytes of pubkey */])?;
 
 // Convert to Address
-let address = desc.to_address(Network::Mainnet)?;
+let address = desc.to_address(Network::Bitcoin)?;
 
 // Convert to ScriptBuf
 let script = desc.to_script()?;
