@@ -184,10 +184,10 @@ impl From<WitnessProgram> for Descriptor {
     }
 }
 
-impl From<TweakedPublicKey> for Descriptor {
-    fn from(tweaked_pubkey: TweakedPublicKey) -> Self {
+impl From<XOnlyPublicKey> for Descriptor {
+    fn from(x_only_pubkey: XOnlyPublicKey) -> Self {
         // NOTE: Guaranteed to have 32 bytes.
-        let payload = tweaked_pubkey.serialize();
+        let payload = x_only_pubkey.serialize();
         let mut bytes = [0u8; 33];
         bytes[0] = 0x04;
         bytes[1..].copy_from_slice(&payload);
@@ -195,10 +195,10 @@ impl From<TweakedPublicKey> for Descriptor {
     }
 }
 
-impl From<XOnlyPublicKey> for Descriptor {
-    fn from(x_only_pubkey: XOnlyPublicKey) -> Self {
+impl From<TweakedPublicKey> for Descriptor {
+    fn from(tweaked_pubkey: TweakedPublicKey) -> Self {
         // NOTE: Guaranteed to have 32 bytes.
-        let payload = x_only_pubkey.serialize();
+        let payload = tweaked_pubkey.serialize();
         let mut bytes = [0u8; 33];
         bytes[0] = 0x04;
         bytes[1..].copy_from_slice(&payload);
@@ -364,6 +364,47 @@ mod tests {
         let desc = Descriptor::from(witness_program);
         assert_eq!(desc.type_tag(), P2tr);
 
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+
+    #[test]
+    fn xonly_pubkey() {
+        // P2TR
+        // Using 0x4 (type_tag) and a 32-byte hash
+        // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
+        // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
+        let xonly_pk = "0f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
+        let xonly_pk = xonly_pk.parse::<XOnlyPublicKey>().unwrap();
+        let desc = Descriptor::from(xonly_pk);
+        assert_eq!(desc.type_tag(), P2tr);
+
+        let address = "bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+
+    #[test]
+    fn tweaked_pubkey() {
+        // P2TR
+        // Using 0x4 (type_tag) and a 32-byte hash
+        // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
+        // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
+        let xonly_pk = "0f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
+        let xonly_pk = xonly_pk.parse::<XOnlyPublicKey>().unwrap();
+        let tweaked_pk = xonly_pk.dangerous_assume_tweaked();
+        let desc = Descriptor::from(tweaked_pk);
+        assert_eq!(desc.type_tag(), P2tr);
+
+        let address = "bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
         assert_eq!(address, address_translated);
     }
