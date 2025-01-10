@@ -302,6 +302,22 @@ mod tests {
     }
 
     #[test]
+    fn from_script_hash() {
+        // P2SH
+        // Using 0x02 (type_tag) and a 20-byte hash
+        // Source: transaction a0f1aaa2fb4582c89e0511df0374a5a2833bf95f7314f4a51b55b7b71e90ce0f
+        // Corresponds to address `3CK4fEwbMP7heJarmU4eqA3sMbVJyEnU3V`
+        let hash = "748284390f9e263a4b766a75d0633c50426eb875";
+        let hash = hash.parse::<ScriptHash>().unwrap();
+        let desc = Descriptor::from(hash);
+        assert_eq!(desc.type_tag(), P2sh);
+
+        let address = Address::p2sh_from_hash(hash, Network::Bitcoin);
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+
+    #[test]
     fn from_witness_program() {
         // P2WPKH
         // Using 0x03 (type_tag) and a 20-byte hash
