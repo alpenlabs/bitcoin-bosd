@@ -3,6 +3,8 @@
 //! This module implements a BOSD parser and validator.
 //!
 //! The main type is [`Descriptor`].
+//! Check this crate's top-level documentation for the
+//! specification and rationale.
 
 use std::{
     fmt::{Display, Formatter},
@@ -13,20 +15,35 @@ use hex::{DisplayHex, FromHex};
 
 use crate::error::DescriptorError;
 
+/// `OP_RETURN` type tag.
+pub(crate) const OP_RETURN_TYPE_TAG: u8 = 0;
+
 /// Maximum length of `OP_RETURN` payload.
 pub(crate) const MAX_OP_RETURN_LEN: usize = 80;
+
+/// `P2PKH` type tag.
+pub(crate) const P2PKH_TYPE_TAG: u8 = 1;
 
 /// Exact length of P2PKH payload.
 pub(crate) const P2PKH_LEN: usize = 20;
 
+/// `P2SH` type tag.
+pub(crate) const P2SH_TYPE_TAG: u8 = 2;
+
 /// Exact length of P2SH payload.
 pub(crate) const P2SH_LEN: usize = 20;
+
+/// `P2WPKH`/`P2WSH` type tag.
+pub(crate) const P2WPKH_P2WSH_TYPE_TAG: u8 = 3;
 
 /// Exact length of P2WPKH payload.
 pub(crate) const P2WPKH_LEN: usize = 20;
 
 /// Exact length of P2WSH payload.
 pub(crate) const P2WSH_LEN: usize = 32;
+
+/// `P2TR` type tag.
+pub(crate) const P2TR_TYPE_TAG: u8 = 4;
 
 /// Exact length of P2TR payload.
 pub(crate) const P2TR_LEN: usize = 32;
@@ -53,60 +70,72 @@ pub struct Descriptor {
 impl Descriptor {
     /// Constructs a new [`Descriptor`] from a byte slice.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, DescriptorError> {
-        let type_tag = DescriptorType::from_u8(bytes[0])?;
+        let type_tag = bytes[0];
         let payload = bytes[1..].to_vec();
         match type_tag {
             // OP_RETURN should be less than 80 bytes.
-            DescriptorType::OpReturn => {
+            OP_RETURN_TYPE_TAG => {
                 let payload_len = payload.len();
                 if payload_len > MAX_OP_RETURN_LEN {
                     Err(DescriptorError::InvalidPayloadLength(payload_len))
                 } else {
-                    Ok(Self { type_tag, payload })
+                    Ok(Self {
+                        type_tag: DescriptorType::OpReturn,
+                        payload,
+                    })
                 }
             }
-            // P2PKH, P2SH, P2WPKH should be all 20 bytes.
-            DescriptorType::P2pkh => {
+            // P2PKH and P2SH should be all 20 bytes.
+            P2PKH_TYPE_TAG => {
                 let payload_len = payload.len();
                 if payload_len != P2PKH_LEN {
                     Err(DescriptorError::InvalidPayloadLength(payload_len))
                 } else {
-                    Ok(Self { type_tag, payload })
+                    Ok(Self {
+                        type_tag: DescriptorType::P2pkh,
+                        payload,
+                    })
                 }
             }
-            DescriptorType::P2sh => {
+            P2SH_TYPE_TAG => {
                 let payload_len = payload.len();
                 if payload_len != P2SH_LEN {
                     Err(DescriptorError::InvalidPayloadLength(payload_len))
                 } else {
-                    Ok(Self { type_tag, payload })
+                    Ok(Self {
+                        type_tag: DescriptorType::P2sh,
+                        payload,
+                    })
                 }
             }
-            DescriptorType::P2wpkh => {
+            // P2WPKH should be 20 bytes and P2SH should be 32 bytes.
+            P2WPKH_P2WSH_TYPE_TAG => {
                 let payload_len = payload.len();
-                if payload_len != P2WPKH_LEN {
-                    Err(DescriptorError::InvalidPayloadLength(payload_len))
-                } else {
-                    Ok(Self { type_tag, payload })
+                match payload_len {
+                    P2WPKH_LEN => Ok(Self {
+                        type_tag: DescriptorType::P2wpkh,
+                        payload,
+                    }),
+                    P2WSH_LEN => Ok(Self {
+                        type_tag: DescriptorType::P2wsh,
+                        payload,
+                    }),
+                    _ => Err(DescriptorError::InvalidPayloadLength(payload_len)),
                 }
             }
-            // P2WSH and P2TR should be all 32 bytes.
-            DescriptorType::P2wsh => {
-                let payload_len = payload.len();
-                if payload_len != P2WSH_LEN {
-                    Err(DescriptorError::InvalidPayloadLength(payload_len))
-                } else {
-                    Ok(Self { type_tag, payload })
-                }
-            }
-            DescriptorType::P2tr => {
+            // P2TR should be 32 bytes.
+            P2TR_TYPE_TAG => {
                 let payload_len = payload.len();
                 if payload_len != P2TR_LEN {
                     Err(DescriptorError::InvalidPayloadLength(payload_len))
                 } else {
-                    Ok(Self { type_tag, payload })
+                    Ok(Self {
+                        type_tag: DescriptorType::P2tr,
+                        payload,
+                    })
                 }
             }
+            _ => Err(DescriptorError::InvalidDescriptorType(type_tag)),
         }
     }
 
@@ -211,30 +240,9 @@ impl DescriptorType {
             DescriptorType::P2pkh => 1,
             DescriptorType::P2sh => 2,
             DescriptorType::P2wpkh => 3,
-            DescriptorType::P2wsh => 4,
-            DescriptorType::P2tr => 5,
+            DescriptorType::P2wsh => 3,
+            DescriptorType::P2tr => 4,
         }
-    }
-
-    fn from_u8(byte: u8) -> Result<Self, DescriptorError> {
-        match byte {
-            0 => Ok(DescriptorType::OpReturn),
-            1 => Ok(DescriptorType::P2pkh),
-            2 => Ok(DescriptorType::P2sh),
-            3 => Ok(DescriptorType::P2wpkh),
-            4 => Ok(DescriptorType::P2wsh),
-            5 => Ok(DescriptorType::P2tr),
-            _ => Err(DescriptorError::InvalidDescriptorType(byte)),
-        }
-    }
-
-    #[allow(dead_code)]
-    fn from_byte(byte: &[u8]) -> Result<Self, DescriptorError> {
-        if byte.len() != 1 {
-            return Err(DescriptorError::InvalidDescriptorTypeLength(byte.len()));
-        }
-        let byte = byte[0];
-        Self::from_u8(byte)
     }
 }
 
@@ -253,7 +261,7 @@ mod tests {
     #[test]
     fn descriptor_from_bytes_invalid() {
         // Invalid type tag
-        let bytes = [6, 1, 2, 3, 4, 5, 6];
+        let bytes = [5, 1, 2, 3, 4, 5, 6];
         assert!(Descriptor::from_bytes(&bytes).is_err());
 
         // Invalid payload length
@@ -266,7 +274,7 @@ mod tests {
         assert!(Descriptor::from_bytes(&bytes).is_err());
 
         // P2TR with 33 bytes
-        let bytes = [5; 34];
+        let bytes = [4; 34];
         assert!(Descriptor::from_bytes(&bytes).is_err());
     }
     #[test]
@@ -286,30 +294,8 @@ mod tests {
         assert_eq!(DescriptorType::P2pkh.to_u8(), 1);
         assert_eq!(DescriptorType::P2sh.to_u8(), 2);
         assert_eq!(DescriptorType::P2wpkh.to_u8(), 3);
-        assert_eq!(DescriptorType::P2wsh.to_u8(), 4);
-        assert_eq!(DescriptorType::P2tr.to_u8(), 5);
-
-        assert_eq!(
-            DescriptorType::from_u8(0).unwrap(),
-            DescriptorType::OpReturn
-        );
-        assert_eq!(DescriptorType::from_u8(1).unwrap(), DescriptorType::P2pkh);
-        assert_eq!(DescriptorType::from_u8(2).unwrap(), DescriptorType::P2sh);
-        assert_eq!(DescriptorType::from_u8(3).unwrap(), DescriptorType::P2wpkh);
-        assert_eq!(
-            DescriptorType::from_u8(4).unwrap(), // P2WSH
-            DescriptorType::P2wsh
-        );
-        assert_eq!(
-            DescriptorType::from_u8(5).unwrap(), // P2TR
-            DescriptorType::P2tr
-        );
-    }
-
-    #[test]
-    fn invalid_descriptor_type() {
-        assert!(DescriptorType::from_u8(6).is_err());
-        assert!(DescriptorType::from_u8(7).is_err());
+        assert_eq!(DescriptorType::P2wsh.to_u8(), 3);
+        assert_eq!(DescriptorType::P2tr.to_u8(), 4);
     }
 
     #[test]
@@ -363,7 +349,7 @@ mod tests {
         // Using 0x4 (type_tag) and a 32-byte hash
         // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
         // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
-        let s = "0465f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3";
+        let s = "0365f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3";
         let desc = Descriptor::from_str(s).unwrap();
         assert_eq!(desc.type_tag(), DescriptorType::P2wsh);
         assert_eq!(
@@ -376,7 +362,7 @@ mod tests {
         // Using 0x5 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
-        let s = "050f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
+        let s = "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
         let desc = Descriptor::from_str(s).unwrap();
         assert_eq!(desc.type_tag(), DescriptorType::P2tr);
         assert_eq!(
@@ -401,7 +387,7 @@ mod tests {
     #[test]
     fn invalid_from_str() {
         // Invalid type tag
-        let s = "060000000000000000000000000000000000000000000000000000000000000000";
+        let s = "050000000000000000000000000000000000000000000000000000000000000000";
         assert!(Descriptor::from_str(s).is_err());
 
         // Invalid payload length
@@ -414,5 +400,7 @@ mod tests {
         assert!(Descriptor::from_str(s).is_err());
 
         // P2TR with 33 bytes
+        let s = "04000000000000000000000000000000000000000000000000000000000000000000";
+        assert!(Descriptor::from_str(s).is_err());
     }
 }
