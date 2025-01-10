@@ -272,6 +272,8 @@ impl From<TweakedPublicKey> for Descriptor {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use bitcoin::address::NetworkUnchecked;
 
     use super::*;
@@ -363,6 +365,87 @@ mod tests {
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
         assert_eq!(address, address_translated);
+    }
+
+    #[test]
+    fn op_return_script() {
+        // OP_RETURN in hex string replacing the 6a (`OP_RETURN`)
+        // for a 0x00 (type_tag) byte for `OP_RETURN`.
+        // Source: https://bitcoin.stackexchange.com/a/29555
+        //         and transaction 8bae12b5f4c088d940733dcd1455efc6a3a69cf9340e17a981286d3778615684
+        let s = "00636861726c6579206c6f766573206865696469";
+        let desc = Descriptor::from_str(s).unwrap();
+
+        let script = desc.to_script_pubkey();
+        assert!(script.is_op_return());
+        // Maximum size is 83 bytes.
+        // See: https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.12.0.md#relay-any-sequence-of-pushdatas-in-op_return-outputs-now-allowed
+        assert!(script.len() < 83);
+    }
+
+    #[test]
+    fn p2pkh_script() {
+        // P2PKH
+        // Using 0x01 (type_tag) and a 20-byte hash
+        // Source: transaction 8bae12b5f4c088d940733dcd1455efc6a3a69cf9340e17a981286d3778615684
+        // Corresponds to address `1HnhWpkMHMjgt167kvgcPyurMmsCQ2WPgg`
+        let s = "01b8268ce4d481413c4e848ff353cd16104291c45b";
+        let desc = Descriptor::from_str(s).unwrap();
+
+        let script = desc.to_script_pubkey();
+        assert!(script.is_p2pkh())
+    }
+
+    #[test]
+    fn p2sh_script() {
+        // P2SH
+        // Using 0x02 (type_tag) and a 20-byte hash
+        // Source: transaction a0f1aaa2fb4582c89e0511df0374a5a2833bf95f7314f4a51b55b7b71e90ce0f
+        // Corresponds to address `3CK4fEwbMP7heJarmU4eqA3sMbVJyEnU3V`
+        let s = "02748284390f9e263a4b766a75d0633c50426eb875";
+        let desc = Descriptor::from_str(s).unwrap();
+
+        let script = desc.to_script_pubkey();
+        assert!(script.is_p2sh())
+    }
+
+    #[test]
+    fn p2wpkh_script() {
+        // P2WPKH
+        // Using 0x03 (type_tag) and a 20-byte hash
+        // Source: transaction 7c53ba0f1fc65f021749cac6a9c163e499fcb2e539b08c040802be55c33d32fe
+        // Corresponds to address `bc1qvugyzunmnq5y8alrmdrxnsh4gts9p9hmvhyd40`
+        let s = "03671041727b982843f7e3db4669c2f542e05096fb";
+        let desc = Descriptor::from_str(s).unwrap();
+
+        let script = desc.to_script_pubkey();
+        assert!(script.is_p2wpkh())
+    }
+
+    #[test]
+    fn p2wsh_script() {
+        // P2WSH
+        // Using 0x3 (type_tag) and a 32-byte hash
+        // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
+        // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
+        let s = "0365f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3";
+        let desc = Descriptor::from_str(s).unwrap();
+
+        let script = desc.to_script_pubkey();
+        assert!(script.is_p2wsh())
+    }
+
+    #[test]
+    fn p2tr_script() {
+        // P2TR
+        // Using 0x4 (type_tag) and a 32-byte hash
+        // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
+        // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
+        let s = "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
+        let desc = Descriptor::from_str(s).unwrap();
+
+        let script = desc.to_script_pubkey();
+        assert!(script.is_p2tr())
     }
 
     #[test]
