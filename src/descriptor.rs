@@ -84,7 +84,7 @@ impl Descriptor {
             // OP_RETURN should be less than 80 bytes.
             OP_RETURN_TYPE_TAG => {
                 let payload_len = payload.len();
-                if payload_len == 0 || payload_len > MAX_OP_RETURN_LEN {
+                if payload_len > MAX_OP_RETURN_LEN {
                     Err(DescriptorError::InvalidPayloadLength(payload_len))
                 } else {
                     Ok(Self {
@@ -326,10 +326,10 @@ mod tests {
         assert!(Descriptor::from_bytes(&bytes).is_err());
 
         // Only tag type byte
-        for tag in 0..=u8::MAX {
+        for tag in 1..=u8::MAX {
             let bytes = [tag];
 
-            // An empty payload is currently invalid for all types
+            // An empty payload is currently invalid for all types except `OP_RETURN`
             assert!(Descriptor::from_bytes(&bytes).is_err());
         }
 
