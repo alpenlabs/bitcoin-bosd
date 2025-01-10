@@ -66,7 +66,10 @@ impl Descriptor {
         }
     }
 
-    pub fn to_script_pubkey(&self) -> ScriptBuf {
+    /// Converts the [`Descriptor`] to a Bitcoin [`ScriptBuf`].
+    ///
+    /// This is a standard relay-safe ScriptPubKey for a Bitcoin output.
+    pub fn to_script(&self) -> ScriptBuf {
         let type_tag = self.type_tag();
         match type_tag {
             OpReturn => {
@@ -376,7 +379,7 @@ mod tests {
         let s = "00636861726c6579206c6f766573206865696469";
         let desc = Descriptor::from_str(s).unwrap();
 
-        let script = desc.to_script_pubkey();
+        let script = desc.to_script();
         assert!(script.is_op_return());
         // Maximum size is 83 bytes.
         // See: https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.12.0.md#relay-any-sequence-of-pushdatas-in-op_return-outputs-now-allowed
@@ -392,7 +395,7 @@ mod tests {
         let s = "01b8268ce4d481413c4e848ff353cd16104291c45b";
         let desc = Descriptor::from_str(s).unwrap();
 
-        let script = desc.to_script_pubkey();
+        let script = desc.to_script();
         assert!(script.is_p2pkh())
     }
 
@@ -405,7 +408,7 @@ mod tests {
         let s = "02748284390f9e263a4b766a75d0633c50426eb875";
         let desc = Descriptor::from_str(s).unwrap();
 
-        let script = desc.to_script_pubkey();
+        let script = desc.to_script();
         assert!(script.is_p2sh())
     }
 
@@ -418,7 +421,7 @@ mod tests {
         let s = "03671041727b982843f7e3db4669c2f542e05096fb";
         let desc = Descriptor::from_str(s).unwrap();
 
-        let script = desc.to_script_pubkey();
+        let script = desc.to_script();
         assert!(script.is_p2wpkh())
     }
 
@@ -431,7 +434,7 @@ mod tests {
         let s = "0365f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3";
         let desc = Descriptor::from_str(s).unwrap();
 
-        let script = desc.to_script_pubkey();
+        let script = desc.to_script();
         assert!(script.is_p2wsh())
     }
 
@@ -444,7 +447,7 @@ mod tests {
         let s = "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
         let desc = Descriptor::from_str(s).unwrap();
 
-        let script = desc.to_script_pubkey();
+        let script = desc.to_script();
         assert!(script.is_p2tr())
     }
 
