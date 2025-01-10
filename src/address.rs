@@ -151,14 +151,29 @@ impl From<WitnessProgram> for Descriptor {
         match witness_program.version() {
             // V0 is SegWit 20-bytes P2WPKH or 32-bytes P2WSH
             WitnessVersion::V0 => {
-                let mut bytes = [0u8; 21];
-                bytes[0] = 0x03;
-                bytes[1..].copy_from_slice(payload);
-                Descriptor::from_bytes(&bytes).expect("infallible")
+                let payload_len = payload.len();
+                match payload_len {
+                    // P2WPKH: 20-bytes
+                    20 => {
+                        let mut bytes = [0u8; 21];
+                        bytes[0] = 0x03;
+                        bytes[1..].copy_from_slice(payload);
+                        Descriptor::from_bytes(&bytes).expect("infallible")
+                    }
+                    // P2WSH: 32-bytes
+                    32 => {
+                        let mut bytes = [0u8; 33];
+                        bytes[0] = 0x03;
+                        bytes[1..].copy_from_slice(payload);
+                        Descriptor::from_bytes(&bytes).expect("infallible")
+                    }
+                    // NOTE: cannot be anything else.
+                    _ => unreachable!(),
+                }
             }
             // V1 is SegWit 32-bytes P2TR
             WitnessVersion::V1 => {
-                let mut bytes = [0u8; 22];
+                let mut bytes = [0u8; 33];
                 bytes[0] = 0x04;
                 bytes[1..].copy_from_slice(payload);
                 Descriptor::from_bytes(&bytes).expect("infallible")
@@ -254,7 +269,7 @@ mod tests {
     #[test]
     fn p2wsh() {
         // P2WSH
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x3 (type_tag) and a 32-byte hash
         // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
         // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
         let address = "bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65";
@@ -271,7 +286,7 @@ mod tests {
 
     #[test]
     fn p2tr() {
-        // Using 0x5 (type_tag) and a 32-byte hash
+        // Using 0x4 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let address = "bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf";
@@ -280,6 +295,57 @@ mod tests {
             .unwrap()
             .assume_checked();
         let desc = Descriptor::from(address.clone());
+        assert_eq!(desc.type_tag(), P2tr);
+
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+
+    #[test]
+    fn from_witness_program() {
+        // P2WPKH
+        // Using 0x03 (type_tag) and a 20-byte hash
+        // Source: transaction 7c53ba0f1fc65f021749cac6a9c163e499fcb2e539b08c040802be55c33d32fe
+        // Corresponds to address `bc1qvugyzunmnq5y8alrmdrxnsh4gts9p9hmvhyd40`
+        let address = "bc1qvugyzunmnq5y8alrmdrxnsh4gts9p9hmvhyd40";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let witness_program = address.witness_program().unwrap();
+        let desc = Descriptor::from(witness_program);
+        assert_eq!(desc.type_tag(), P2wpkh);
+
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+
+        // P2WSH
+        // Using 0x3 (type_tag) and a 32-byte hash
+        // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
+        // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
+        let address = "bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let witness_program = address.witness_program().unwrap();
+        let desc = Descriptor::from(witness_program);
+        assert_eq!(desc.type_tag(), P2wsh);
+
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+
+        // P2TR
+        // Using 0x4 (type_tag) and a 32-byte hash
+        // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
+        // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
+        let address = "bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let witness_program = address.witness_program().unwrap();
+        let desc = Descriptor::from(witness_program);
         assert_eq!(desc.type_tag(), P2tr);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
