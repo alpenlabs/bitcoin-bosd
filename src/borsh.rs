@@ -37,7 +37,6 @@ impl BorshDeserialize for Descriptor {
 
 #[cfg(test)]
 mod tests {
-    use std::iter::repeat;
     use std::str::FromStr;
 
     use crate::DescriptorType;
@@ -48,13 +47,7 @@ mod tests {
     #[test]
     fn invalid_borsh_deserialization() {
         // Create invalid data
-        let invalid_bytes = [
-            33, 0, 0, 0, // length prefix (33 bytes)
-            5, // invalid type tag
-        ]
-        .into_iter()
-        .chain(repeat(0).take(32)) // 32 zero bytes
-        .collect::<Vec<u8>>();
+        let invalid_bytes: Vec<u8> = vec![5; 33]; // invalid type tag
 
         let result = Descriptor::try_from_slice(&invalid_bytes);
         assert!(result.is_err());

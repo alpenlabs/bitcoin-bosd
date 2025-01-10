@@ -76,7 +76,7 @@ impl Descriptor {
             // OP_RETURN should be less than 80 bytes.
             OP_RETURN_TYPE_TAG => {
                 let payload_len = payload.len();
-                if payload_len > MAX_OP_RETURN_LEN {
+                if payload_len == 0 || payload_len > MAX_OP_RETURN_LEN {
                     Err(DescriptorError::InvalidPayloadLength(payload_len))
                 } else {
                     Ok(Self {
