@@ -17,6 +17,9 @@ hex = { package = "hex-conservative", version = "0.2.1" } # for optimization kee
 serde = { version = "1.0.217", optional = true }
 thiserror = "2.0.10"
 
+[dev-dependencies]
+serde_json = "1.0.135"
+
 [features]
 default = ["address", "serde"]
 address = ["dep:bitcoin"]
