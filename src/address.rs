@@ -5,9 +5,11 @@
 //! Note you need to use the `address` feature.
 use bitcoin::{
     address::AddressData,
-    hashes::{hash160::Hash, Hash as _},
+    hashes::{hash160::Hash as Hash160, sha256::Hash as Hash256, Hash as _},
     key::{TapTweak, TweakedPublicKey},
-    Address, Network, ScriptBuf, ScriptHash, WitnessProgram, WitnessVersion, XOnlyPublicKey,
+    opcodes::all::OP_RETURN,
+    Address, Network, PubkeyHash, ScriptBuf, ScriptHash, WPubkeyHash, WScriptHash, WitnessProgram,
+    WitnessVersion, XOnlyPublicKey,
 };
 
 use crate::{fixed_bytes, Descriptor, DescriptorError, DescriptorType::*};
@@ -21,14 +23,14 @@ impl Descriptor {
             P2pkh => {
                 fixed_bytes!(20);
                 let bytes = to_fixed_bytes(self);
-                let hash = Hash::from_bytes_ref(&bytes);
+                let hash = Hash160::from_bytes_ref(&bytes);
                 let address = Address::p2pkh(*hash, network);
                 Ok(address)
             }
             P2sh => {
                 fixed_bytes!(20);
                 let bytes = to_fixed_bytes(self);
-                let hash = Hash::from_bytes_ref(&bytes);
+                let hash = Hash160::from_bytes_ref(&bytes);
                 let script_hash = ScriptHash::from_raw_hash(*hash);
                 let address = Address::p2sh_from_hash(script_hash, network);
                 Ok(address)
@@ -65,7 +67,58 @@ impl Descriptor {
     }
 
     pub fn to_script_pubkey(&self) -> ScriptBuf {
-        todo!()
+        let type_tag = self.type_tag();
+        match type_tag {
+            OpReturn => {
+                todo!()
+                // let payload = self.payload();
+                // let fixed_payload = to_sized_array!(payload);
+                // let script = ScriptBuf::builder()
+                //     .push_opcode(OP_RETURN)
+                //     .push_slice(&to_sized_array!(payload))
+                //     .into_script();
+                // assert!(script.is_op_return());
+                // script
+            }
+            P2pkh => {
+                fixed_bytes!(20);
+                let bytes = to_fixed_bytes(self);
+                let hash = Hash160::from_bytes_ref(&bytes);
+                let pubkey_hash = PubkeyHash::from_raw_hash(*hash);
+                ScriptBuf::new_p2pkh(&pubkey_hash)
+            }
+            P2sh => {
+                fixed_bytes!(20);
+                let bytes = to_fixed_bytes(self);
+                let hash = Hash160::from_bytes_ref(&bytes);
+                let script_hash = ScriptHash::from_raw_hash(*hash);
+                ScriptBuf::new_p2sh(&script_hash)
+            }
+            P2wpkh => {
+                fixed_bytes!(20);
+                let bytes = to_fixed_bytes(self);
+                let hash = Hash160::from_bytes_ref(&bytes);
+                let wpubkey_hash = WPubkeyHash::from_raw_hash(*hash);
+                ScriptBuf::new_p2wpkh(&wpubkey_hash)
+            }
+            P2wsh => {
+                fixed_bytes!(32);
+                let bytes = to_fixed_bytes(self);
+                let hash = Hash256::from_bytes_ref(&bytes);
+                let wscript_hash = WScriptHash::from_raw_hash(*hash);
+                ScriptBuf::new_p2wsh(&wscript_hash)
+            }
+            P2tr => {
+                fixed_bytes!(32);
+                let bytes = to_fixed_bytes(self);
+                // WARN: we are assuming that the X-only public key is already tweaked
+                //       and not the internal key.
+                //       See [BIP 341](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)
+                //       for more details.
+                let xonly_pubkey = XOnlyPublicKey::from_slice(&bytes).expect("infallible");
+                ScriptBuf::new_p2tr_tweaked(xonly_pubkey.dangerous_assume_tweaked())
+            }
+        }
     }
 }
 
