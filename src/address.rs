@@ -190,3 +190,99 @@ impl From<XOnlyPublicKey> for Descriptor {
         Descriptor::from_bytes(&bytes).expect("infallible")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use bitcoin::address::NetworkUnchecked;
+
+    use super::*;
+
+    #[test]
+    fn p2pkh() {
+        // P2PKH
+        // Using 0x01 (type_tag) and a 20-byte hash
+        // Source: transaction 8bae12b5f4c088d940733dcd1455efc6a3a69cf9340e17a981286d3778615684
+        // Corresponds to address `1HnhWpkMHMjgt167kvgcPyurMmsCQ2WPgg`
+        let address = "1HnhWpkMHMjgt167kvgcPyurMmsCQ2WPgg";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let desc = Descriptor::from(address.clone());
+        assert_eq!(desc.type_tag(), P2pkh);
+
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+
+    #[test]
+    fn p2sh() {
+        // P2SH
+        // Using 0x02 (type_tag) and a 20-byte hash
+        // Source: transaction a0f1aaa2fb4582c89e0511df0374a5a2833bf95f7314f4a51b55b7b71e90ce0f
+        // Corresponds to address `3CK4fEwbMP7heJarmU4eqA3sMbVJyEnU3V`
+        let address = "3CK4fEwbMP7heJarmU4eqA3sMbVJyEnU3V";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let desc = Descriptor::from(address.clone());
+        assert_eq!(desc.type_tag(), P2sh);
+
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+
+    #[test]
+    fn p2wpkh() {
+        // P2WPKH
+        // Using 0x03 (type_tag) and a 20-byte hash
+        // Source: transaction 7c53ba0f1fc65f021749cac6a9c163e499fcb2e539b08c040802be55c33d32fe
+        // Corresponds to address `bc1qvugyzunmnq5y8alrmdrxnsh4gts9p9hmvhyd40`
+        let address = "bc1qvugyzunmnq5y8alrmdrxnsh4gts9p9hmvhyd40";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let desc = Descriptor::from(address.clone());
+        assert_eq!(desc.type_tag(), P2wpkh);
+
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+
+    #[test]
+    fn p2wsh() {
+        // P2WSH
+        // Using 0x4 (type_tag) and a 32-byte hash
+        // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
+        // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
+        let address = "bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let desc = Descriptor::from(address.clone());
+        assert_eq!(desc.type_tag(), P2wsh);
+
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+
+    #[test]
+    fn p2tr() {
+        // Using 0x5 (type_tag) and a 32-byte hash
+        // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
+        // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
+        let address = "bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf";
+        let address = address
+            .parse::<Address<NetworkUnchecked>>()
+            .unwrap()
+            .assume_checked();
+        let desc = Descriptor::from(address.clone());
+        assert_eq!(desc.type_tag(), P2tr);
+
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
+    }
+}
