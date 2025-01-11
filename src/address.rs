@@ -16,7 +16,7 @@ use crate::{
     descriptor::{
         P2PKH_TYPE_TAG, P2SH_TYPE_TAG, P2TR_TYPE_TAG, P2WPKH_LEN, P2WPKH_P2WSH_TYPE_TAG, P2WSH_LEN,
     },
-    fixed_bytes, Descriptor, DescriptorError,
+    Descriptor, DescriptorError,
     DescriptorType::*,
 };
 
@@ -27,39 +27,34 @@ impl Descriptor {
         match self.type_tag() {
             OpReturn => Err(DescriptorError::InvalidAddressConversion(OpReturn)),
             P2pkh => {
-                fixed_bytes!(20);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<20>();
                 let hash = Hash160::from_bytes_ref(&bytes);
                 let address = Address::p2pkh(*hash, network);
                 Ok(address)
             }
             P2sh => {
-                fixed_bytes!(20);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<20>();
                 let hash = Hash160::from_bytes_ref(&bytes);
                 let script_hash = ScriptHash::from_raw_hash(*hash);
                 let address = Address::p2sh_from_hash(script_hash, network);
                 Ok(address)
             }
             P2wpkh => {
-                fixed_bytes!(20);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<20>();
                 // V0 is SegWit 20-bytes P2WPKH
                 let witness_program = WitnessProgram::new(WitnessVersion::V0, &bytes)?;
                 let address = Address::from_witness_program(witness_program, network);
                 Ok(address)
             }
             P2wsh => {
-                fixed_bytes!(32);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<32>();
                 // V0 is SegWit 32-bytes P2WSH
                 let witness_program = WitnessProgram::new(WitnessVersion::V0, &bytes)?;
                 let address = Address::from_witness_program(witness_program, network);
                 Ok(address)
             }
             P2tr => {
-                fixed_bytes!(32);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<32>();
                 let xonly_pubkey = XOnlyPublicKey::from_slice(&bytes)?;
                 // WARN: we are assuming that the X-only public key is already tweaked
                 //       and not the internal key.
@@ -101,36 +96,31 @@ impl Descriptor {
                 script
             }
             P2pkh => {
-                fixed_bytes!(20);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<20>();
                 let hash = Hash160::from_bytes_ref(&bytes);
                 let pubkey_hash = PubkeyHash::from_raw_hash(*hash);
                 ScriptBuf::new_p2pkh(&pubkey_hash)
             }
             P2sh => {
-                fixed_bytes!(20);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<20>();
                 let hash = Hash160::from_bytes_ref(&bytes);
                 let script_hash = ScriptHash::from_raw_hash(*hash);
                 ScriptBuf::new_p2sh(&script_hash)
             }
             P2wpkh => {
-                fixed_bytes!(20);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<20>();
                 let hash = Hash160::from_bytes_ref(&bytes);
                 let wpubkey_hash = WPubkeyHash::from_raw_hash(*hash);
                 ScriptBuf::new_p2wpkh(&wpubkey_hash)
             }
             P2wsh => {
-                fixed_bytes!(32);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<32>();
                 let hash = Hash256::from_bytes_ref(&bytes);
                 let wscript_hash = WScriptHash::from_raw_hash(*hash);
                 ScriptBuf::new_p2wsh(&wscript_hash)
             }
             P2tr => {
-                fixed_bytes!(32);
-                let bytes = to_fixed_bytes(self);
+                let bytes = self.to_fixed_bytes::<32>();
                 // WARN: we are assuming that the X-only public key is already tweaked
                 //       and not the internal key.
                 //       See [BIP 341](https://github.com/bitcoin/bips/blob/master/bip-0341.mediawiki)
