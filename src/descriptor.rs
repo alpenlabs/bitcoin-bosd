@@ -19,34 +19,34 @@ use crate::error::DescriptorError;
 pub(crate) const OP_RETURN_TYPE_TAG: u8 = 0;
 
 /// Maximum length of `OP_RETURN` payload.
-pub(crate) const MAX_OP_RETURN_LEN: usize = 80;
+pub const MAX_OP_RETURN_LEN: usize = 80;
 
 /// `P2PKH` type tag.
 pub(crate) const P2PKH_TYPE_TAG: u8 = 1;
 
 /// Exact length of P2PKH payload.
-pub(crate) const P2PKH_LEN: usize = 20;
+pub const P2PKH_LEN: usize = 20;
 
 /// `P2SH` type tag.
 pub(crate) const P2SH_TYPE_TAG: u8 = 2;
 
 /// Exact length of P2SH payload.
-pub(crate) const P2SH_LEN: usize = 20;
+pub const P2SH_LEN: usize = 20;
 
 /// `P2WPKH`/`P2WSH` type tag.
 pub(crate) const P2WPKH_P2WSH_TYPE_TAG: u8 = 3;
 
 /// Exact length of P2WPKH payload.
-pub(crate) const P2WPKH_LEN: usize = 20;
+pub const P2WPKH_LEN: usize = 20;
 
 /// Exact length of P2WSH payload.
-pub(crate) const P2WSH_LEN: usize = 32;
+pub const P2WSH_LEN: usize = 32;
 
 /// `P2TR` type tag.
 pub(crate) const P2TR_TYPE_TAG: u8 = 4;
 
 /// Exact length of P2TR payload.
-pub(crate) const P2TR_LEN: usize = 32;
+pub const P2TR_LEN: usize = 32;
 
 /// A Bitcoin Output Script Descriptor (BOSD).
 ///
