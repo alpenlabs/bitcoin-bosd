@@ -472,14 +472,14 @@ mod tests {
             "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
         )
         .unwrap();
-        let bytes = desc.to_fixed_bytes::<32>();
-        assert_eq!(bytes.len(), 32);
+        let bytes = desc.to_fixed_bytes::<P2TR_LEN>();
+        assert_eq!(bytes.len(), P2TR_LEN);
     }
 
     #[test]
     fn test_p2pkh_fixed_bytes() {
         let desc = Descriptor::from_str("01b8268ce4d481413c4e848ff353cd16104291c45b").unwrap();
-        let bytes = desc.to_fixed_bytes::<20>();
-        assert_eq!(bytes.len(), 20);
+        let bytes = desc.to_fixed_bytes::<P2PKH_LEN>();
+        assert_eq!(bytes.len(), P2PKH_LEN);
     }
 }
