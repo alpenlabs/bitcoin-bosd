@@ -23,7 +23,7 @@ and efficiently represent standard Bitcoin output types:
 
 | Type | Payload Len | Payload Interpretation |
 | ---- | ----------- | ---------------------- |
-| 0    | ..=80       | `OP_RETURN` payload    |
+| 0    | 0..=80      | `OP_RETURN` payload    |
 | 1    | 20          | P2PKH hash             |
 | 2    | 20          | P2SH hash              |
 | 3    | 20          | P2WPKH hash            |
