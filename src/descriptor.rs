@@ -33,17 +33,20 @@ pub(crate) const P2SH_TYPE_TAG: u8 = 2;
 /// Exact length of P2SH payload.
 pub const P2SH_LEN: usize = 20;
 
-/// `P2WPKH`/`P2WSH` type tag.
-pub(crate) const P2WPKH_P2WSH_TYPE_TAG: u8 = 3;
+/// `P2WPKH` type tag.
+pub(crate) const P2WPKH_TYPE_TAG: u8 = 3;
 
 /// Exact length of P2WPKH payload.
 pub const P2WPKH_LEN: usize = 20;
+
+/// `P2WSH` type tag.
+pub(crate) const P2WSH_TYPE_TAG: u8 = 4;
 
 /// Exact length of P2WSH payload.
 pub const P2WSH_LEN: usize = 32;
 
 /// `P2TR` type tag.
-pub(crate) const P2TR_TYPE_TAG: u8 = 4;
+pub(crate) const P2TR_TYPE_TAG: u8 = 5;
 
 /// Exact length of P2TR payload.
 pub const P2TR_LEN: usize = 32;
@@ -116,19 +119,28 @@ impl Descriptor {
                     })
                 }
             }
-            // P2WPKH should be 20 bytes and P2SH should be 32 bytes.
-            P2WPKH_P2WSH_TYPE_TAG => {
+            // P2WPKH should be 20 bytes.
+            P2WPKH_TYPE_TAG => {
                 let payload_len = payload.len();
-                match payload_len {
-                    P2WPKH_LEN => Ok(Self {
+                if payload_len != P2WPKH_LEN {
+                    Err(DescriptorError::InvalidPayloadLength(payload_len))
+                } else {
+                    Ok(Self {
                         type_tag: DescriptorType::P2wpkh,
                         payload,
-                    }),
-                    P2WSH_LEN => Ok(Self {
+                    })
+                }
+            }
+            // P2WSH should be 32 bytes.
+            P2WSH_TYPE_TAG => {
+                let payload_len = payload.len();
+                if payload_len != P2WSH_LEN {
+                    Err(DescriptorError::InvalidPayloadLength(payload_len))
+                } else {
+                    Ok(Self {
                         type_tag: DescriptorType::P2wsh,
                         payload,
-                    }),
-                    _ => Err(DescriptorError::InvalidPayloadLength(payload_len)),
+                    })
                 }
             }
             // P2TR should be 32 bytes.
@@ -301,8 +313,8 @@ impl DescriptorType {
             DescriptorType::P2pkh => 1,
             DescriptorType::P2sh => 2,
             DescriptorType::P2wpkh => 3,
-            DescriptorType::P2wsh => 3,
-            DescriptorType::P2tr => 4,
+            DescriptorType::P2wsh => 4,
+            DescriptorType::P2tr => 5,
         }
     }
 }
@@ -334,7 +346,7 @@ mod tests {
         }
 
         // Invalid type tag
-        let bytes = [5, 1, 2, 3, 4, 5, 6];
+        let bytes = [6, 1, 2, 3, 4, 5, 6];
         assert!(Descriptor::from_bytes(&bytes).is_err());
 
         // Invalid payload length
@@ -347,7 +359,7 @@ mod tests {
         assert!(Descriptor::from_bytes(&bytes).is_err());
 
         // P2TR with 33 bytes
-        let bytes = [4; 34];
+        let bytes = [5; 34];
         assert!(Descriptor::from_bytes(&bytes).is_err());
     }
     #[test]
@@ -367,8 +379,8 @@ mod tests {
         assert_eq!(DescriptorType::P2pkh.to_u8(), 1);
         assert_eq!(DescriptorType::P2sh.to_u8(), 2);
         assert_eq!(DescriptorType::P2wpkh.to_u8(), 3);
-        assert_eq!(DescriptorType::P2wsh.to_u8(), 3);
-        assert_eq!(DescriptorType::P2tr.to_u8(), 4);
+        assert_eq!(DescriptorType::P2wsh.to_u8(), 4);
+        assert_eq!(DescriptorType::P2tr.to_u8(), 5);
     }
 
     #[test]
@@ -419,10 +431,10 @@ mod tests {
         );
 
         // P2WSH
-        // Using 0x3 (type_tag) and a 32-byte hash
+        // Using 0x04 (type_tag) and a 32-byte hash
         // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
         // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
-        let s = "0365f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3";
+        let s = "0465f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3";
         let desc = Descriptor::from_str(s).unwrap();
         assert_eq!(desc.type_tag(), DescriptorType::P2wsh);
         assert_eq!(
@@ -432,10 +444,10 @@ mod tests {
         );
 
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
-        let s = "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
+        let s = "050f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
         let desc = Descriptor::from_str(s).unwrap();
         assert_eq!(desc.type_tag(), DescriptorType::P2tr);
         assert_eq!(
@@ -460,7 +472,7 @@ mod tests {
     #[test]
     fn invalid_from_str() {
         // Invalid type tag
-        let s = "050000000000000000000000000000000000000000000000000000000000000000";
+        let s = "060000000000000000000000000000000000000000000000000000000000000000";
         assert!(Descriptor::from_str(s).is_err());
 
         // Invalid payload length
@@ -473,7 +485,7 @@ mod tests {
         assert!(Descriptor::from_str(s).is_err());
 
         // P2TR with 33 bytes
-        let s = "04000000000000000000000000000000000000000000000000000000000000000000";
+        let s = "05000000000000000000000000000000000000000000000000000000000000000000";
         assert!(Descriptor::from_str(s).is_err());
     }
 
@@ -481,7 +493,7 @@ mod tests {
     fn test_p2tr_fixed_bytes() {
         fixed_bytes!(32); // Generates to_fixed_bytes for P2TR/P2WSH
         let desc = Descriptor::from_str(
-            "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
+            "050f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
         )
         .unwrap();
         let bytes = to_fixed_bytes(&desc);
