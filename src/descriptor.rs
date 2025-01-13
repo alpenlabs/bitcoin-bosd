@@ -184,15 +184,16 @@ impl Descriptor {
     ///
     /// ```
     /// # use std::str::FromStr;
+    /// # use hex::FromHex;
     /// #
     /// # use bitcoin_bosd::Descriptor;
     /// #
     /// # fn main() {
-    /// let desc = Descriptor::from_str(
-    ///     "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
-    /// ).unwrap();
+    /// let raw = "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
+    /// let desc = Descriptor::from_str(raw).unwrap();
     /// let bytes = desc.to_fixed_payload_bytes::<32>();
     /// assert_eq!(bytes.len(), 32);
+    /// # assert_eq!(bytes.as_slice(), &Vec::from_hex(raw).unwrap()[1..]);
     /// # }
     /// ```
     pub fn to_fixed_payload_bytes<const B: usize>(&self) -> [u8; B] {
