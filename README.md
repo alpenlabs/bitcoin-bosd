@@ -27,15 +27,15 @@ and efficiently represent standard Bitcoin output types:
 | 1    | 20          | P2PKH hash             |
 | 2    | 20          | P2SH hash              |
 | 3    | 20          | P2WPKH hash            |
-| 3    | 32          | P2WSH hash             |
-| 4    | 32          | P2TR X-only PubKey     |
+| 4    | 32          | P2WSH hash             |
+| 5    | 32          | P2TR X-only PubKey     |
 
 ## Examples
 
 - SegWit V0 (P2WPKH) bech32 mainnet address given a 20-byte public key hash:
   `034d6151263d87371392bb1b60405392c5ba2e3297` $\iff$ `bc1qf4s4zf3asum38y4mrdsyq5ujckazuv5hczg979`
 - SegWit V1 (P2TR) bech32m mainnet address given a 32-byte X-only public key:
-  `041234123412341234123412341234123412341234123412341234123412341234`
+  `051234123412341234123412341234123412341234123412341234123412341234`
   $\iff$ `bc1pzg6pydqjxsfrgy35zg6pydqjxsfrgy35zg6pydqjxsfrgy35zg6qf6d5se`
 - `OP_RETURN` payload given a hex string that is less than 80 bytes:
   `00deadbeefcafebabe` $\iff$ `RETURN PUSHDATA(deadbeefcafebabe)`
@@ -63,11 +63,11 @@ let borsh_bytes = borsh::to_vec(&desc)?;
 
 ## Features
 
-| Feature | Default? | Description |
-| :--- | :---: | :--- |
-| `address` | ✓ | Adds Bitcoin [`Address`](https://docs.rs/bitcoin/latest/bitcoin/struct.Address.html) and [`ScriptBuf`](https://docs.rs/bitcoin/latest/bitcoin/struct.ScriptBuf.html) functionality |
-| `borsh` | | Adds descriptor serialization and deserialization via [`borsh`](https://borsh.io) |
-| `serde` | ✓ | Adds descriptor serialization and deserialization via [`serde`](https://serde.rs) |
+| Feature   | Default? | Description                                                                                                                                                                        |
+| :-------- | :------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `address` |    ✓     | Adds Bitcoin [`Address`](https://docs.rs/bitcoin/latest/bitcoin/struct.Address.html) and [`ScriptBuf`](https://docs.rs/bitcoin/latest/bitcoin/struct.ScriptBuf.html) functionality |
+| `borsh`   |          | Adds descriptor serialization and deserialization via [`borsh`](https://borsh.io)                                                                                                  |
+| `serde`   |    ✓     | Adds descriptor serialization and deserialization via [`serde`](https://serde.rs)                                                                                                  |
 
 ## Rationale
 
