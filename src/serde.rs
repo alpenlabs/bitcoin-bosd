@@ -73,12 +73,12 @@ mod tests {
     #[test]
     fn invalid_deserialization() {
         // Test invalid JSON (hex string)
-        let invalid_json = "\"0500000000000000000000000000000000000000000000000000000000000000\"";
+        let invalid_json = "\"0600000000000000000000000000000000000000000000000000000000000000\"";
         let json_result: Result<Descriptor, _> = serde_json::from_str(invalid_json);
         assert!(json_result.is_err());
 
         // Test invalid bincode (raw bytes)
-        let invalid_bytes: Vec<u8> = vec![5; 33]; // invalid type tag
+        let invalid_bytes: Vec<u8> = vec![6; 33]; // invalid type tag
         let bincode_result: Result<Descriptor, _> = bincode::deserialize(&invalid_bytes);
         assert!(bincode_result.is_err());
 
@@ -143,11 +143,11 @@ mod tests {
     #[test]
     fn serde_p2wsh() {
         // P2WSH
-        // Using 0x3 (type_tag) and a 32-byte hash
+        // Using 0x04 (type_tag) and a 32-byte hash
         // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
         // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
         let descriptor = Descriptor::from_str(
-            "0365f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3",
+            "0465f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3",
         )
         .unwrap();
 
@@ -158,11 +158,11 @@ mod tests {
     #[test]
     fn serde_p2tr() {
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let descriptor = Descriptor::from_str(
-            "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
+            "050f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
         )
         .unwrap();
 
@@ -173,11 +173,11 @@ mod tests {
     #[test]
     fn compare_serialization_formats() {
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let descriptor = Descriptor::from_str(
-            "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
+            "050f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
         )
         .unwrap();
 
@@ -199,11 +199,11 @@ mod tests {
     #[test]
     fn test_human_readable_format() {
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let descriptor = Descriptor::from_str(
-            "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
+            "050f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
         )
         .unwrap();
 
