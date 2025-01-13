@@ -63,11 +63,11 @@ let borsh_bytes = borsh::to_vec(&desc)?;
 
 ## Features
 
-| Feature | Default? | Description |
-| :--- | :---: | :--- |
-| `address` | ✓ | Adds Bitcoin [`Address`](https://docs.rs/bitcoin/latest/bitcoin/struct.Address.html) and [`ScriptBuf`](https://docs.rs/bitcoin/latest/bitcoin/struct.ScriptBuf.html) functionality |
-| `borsh` | | Adds descriptor serialization and deserialization via [`borsh`](https://borsh.io) |
-| `serde` | ✓ | Adds descriptor serialization and deserialization via [`serde`](https://serde.rs) |
+| Feature   | Default? | Description                                                                                                                                                                        |
+| :-------- | :------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `address` |    ✓     | Adds Bitcoin [`Address`](https://docs.rs/bitcoin/latest/bitcoin/struct.Address.html) and [`ScriptBuf`](https://docs.rs/bitcoin/latest/bitcoin/struct.ScriptBuf.html) functionality |
+| `borsh`   |          | Adds descriptor serialization and deserialization via [`borsh`](https://borsh.io)                                                                                                  |
+| `serde`   |    ✓     | Adds descriptor serialization and deserialization via [`serde`](https://serde.rs)                                                                                                  |
 
 ## Rationale
 
@@ -114,6 +114,22 @@ So looking at these constraints we can say that we have these requirements:
 - must not include network-related data that's redundant based on context; and
 - is a bijection with some sane "relay safe subset" of `ScriptBuf`s,
   corresponding to both textual addresses and including `OP_RETURN`s.
+
+### A note on SegWit outputs
+
+BOSD tries to adhere to how SegWit outputs are defined in Bitcoin.
+
+In a SegWit output, you specify the Segwit version and the witness program.
+For version 0, depending on the length of the witness program,
+you can have either a 20-byte hash or a 32-byte hash;
+that translates to a P2WPKH or P2WSH output, respectively.
+
+Hence, BOSD has the same type tag `3` for both P2WPKH and P2WSH,
+while deferring the length of the payload to define the type of
+script output.
+
+This logic does not apply to SegWit version 1, P2TR,
+since it always uses a 32-byte hash.
 
 ## Contributing
 
