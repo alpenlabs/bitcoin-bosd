@@ -116,7 +116,7 @@ mod tests {
     #[test]
     fn borsh_p2wsh() {
         // P2WSH
-        // Using 0x3 (type_tag) and a 32-byte hash
+        // Using 0x03 (type_tag) and a 32-byte hash
         // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
         // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
         let original = Descriptor::from_str(
@@ -134,7 +134,7 @@ mod tests {
     #[test]
     fn borsh_p2tr() {
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x04 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let original = Descriptor::from_str(
