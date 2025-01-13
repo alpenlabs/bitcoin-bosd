@@ -13,7 +13,7 @@ use bitcoin::{
 };
 
 use crate::{
-    descriptor::{P2PKH_TYPE_TAG, P2SH_TYPE_TAG, P2TR_TYPE_TAG, P2WPKH_P2WSH_TYPE_TAG},
+    descriptor::{P2PKH_TYPE_TAG, P2SH_TYPE_TAG, P2TR_TYPE_TAG, P2WPKH_TYPE_TAG, P2WSH_TYPE_TAG},
     fixed_bytes, Descriptor, DescriptorError,
     DescriptorType::*,
 };
@@ -169,14 +169,14 @@ impl From<Address> for Descriptor {
                         // P2WPKH: 20 bytes
                         20 => {
                             let mut bytes = [0u8; 21];
-                            bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
+                            bytes[0] = P2WPKH_TYPE_TAG;
                             bytes[1..].copy_from_slice(payload);
                             Descriptor::from_bytes(&bytes).expect("infallible")
                         }
                         // P2WSH: 32 bytes
                         32 => {
                             let mut bytes = [0u8; 33];
-                            bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
+                            bytes[0] = P2WSH_TYPE_TAG;
                             bytes[1..].copy_from_slice(payload);
                             Descriptor::from_bytes(&bytes).expect("infallible")
                         }
@@ -222,14 +222,14 @@ impl From<WitnessProgram> for Descriptor {
                     // P2WPKH: 20-bytes
                     20 => {
                         let mut bytes = [0u8; 21];
-                        bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
+                        bytes[0] = P2WPKH_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
                         Descriptor::from_bytes(&bytes).expect("infallible")
                     }
                     // P2WSH: 32-bytes
                     32 => {
                         let mut bytes = [0u8; 33];
-                        bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
+                        bytes[0] = P2WSH_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
                         Descriptor::from_bytes(&bytes).expect("infallible")
                     }
@@ -255,7 +255,7 @@ impl From<XOnlyPublicKey> for Descriptor {
         // NOTE: Guaranteed to have 32 bytes.
         let payload = x_only_pubkey.serialize();
         let mut bytes = [0u8; 33];
-        bytes[0] = 0x04;
+        bytes[0] = P2TR_TYPE_TAG;
         bytes[1..].copy_from_slice(&payload);
         Descriptor::from_bytes(&bytes).expect("infallible")
     }
@@ -337,7 +337,7 @@ mod tests {
     #[test]
     fn p2wsh() {
         // P2WSH
-        // Using 0x3 (type_tag) and a 32-byte hash
+        // Using 0x04 (type_tag) and a 32-byte hash
         // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
         // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
         let address = "bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65";
@@ -354,7 +354,7 @@ mod tests {
 
     #[test]
     fn p2tr() {
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let address = "bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf";
@@ -427,10 +427,10 @@ mod tests {
     #[test]
     fn p2wsh_script() {
         // P2WSH
-        // Using 0x3 (type_tag) and a 32-byte hash
+        // Using 0x04 (type_tag) and a 32-byte hash
         // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
         // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
-        let s = "0365f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3";
+        let s = "0465f91a53cb7120057db3d378bd0f7d944167d43a7dcbff15d6afc4823f1d3ed3";
         let desc = Descriptor::from_str(s).unwrap();
 
         let script = desc.to_script();
@@ -440,10 +440,10 @@ mod tests {
     #[test]
     fn p2tr_script() {
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
-        let s = "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
+        let s = "050f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
         let desc = Descriptor::from_str(s).unwrap();
 
         let script = desc.to_script();
@@ -485,7 +485,7 @@ mod tests {
         assert_eq!(address, address_translated);
 
         // P2WSH
-        // Using 0x3 (type_tag) and a 32-byte hash
+        // Using 0x04 (type_tag) and a 32-byte hash
         // Source: transaction fbf3517516ebdf03358a9ef8eb3569f96ac561c162524e37e9088eb13b228849
         // Corresponds to address `bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65`
         let address = "bc1qvhu3557twysq2ldn6dut6rmaj3qk04p60h9l79wk4lzgy0ca8mfsnffz65";
@@ -501,7 +501,7 @@ mod tests {
         assert_eq!(address, address_translated);
 
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let address = "bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf";
@@ -520,7 +520,7 @@ mod tests {
     #[test]
     fn xonly_pubkey() {
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let xonly_pk = "0f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
@@ -540,7 +540,7 @@ mod tests {
     #[test]
     fn tweaked_pubkey() {
         // P2TR
-        // Using 0x4 (type_tag) and a 32-byte hash
+        // Using 0x05 (type_tag) and a 32-byte hash
         // Source: transaction a7115c7267dbb4aab62b37818d431b784fe731f4d2f9fa0939a9980d581690ec
         // Corresponds to address `bc1ppuxgmd6n4j73wdp688p08a8rte97dkn5n70r2ym6kgsw0v3c5ensrytduf`
         let xonly_pk = "0f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
