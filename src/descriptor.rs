@@ -175,7 +175,7 @@ impl Descriptor {
     /// #
     /// # fn main() {
     /// let desc = Descriptor::from_str("01b8268ce4d481413c4e848ff353cd16104291c45b").unwrap();
-    /// let bytes = desc.to_fixed_bytes::<20>();
+    /// let bytes = desc.to_fixed_payload_bytes::<20>();
     /// assert_eq!(bytes.len(), 20);
     /// # }
     /// ```
@@ -191,11 +191,11 @@ impl Descriptor {
     /// let desc = Descriptor::from_str(
     ///     "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
     /// ).unwrap();
-    /// let bytes = desc.to_fixed_bytes::<32>();
+    /// let bytes = desc.to_fixed_payload_bytes::<32>();
     /// assert_eq!(bytes.len(), 32);
     /// # }
     /// ```
-    pub fn to_fixed_bytes<const B: usize>(&self) -> [u8; B] {
+    pub fn to_fixed_payload_bytes<const B: usize>(&self) -> [u8; B] {
         let mut bytes = [0u8; B];
         let len = self.payload().len().min(B);
         bytes[..len].copy_from_slice(&self.payload()[..len]);
@@ -472,14 +472,14 @@ mod tests {
             "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667",
         )
         .unwrap();
-        let bytes = desc.to_fixed_bytes::<P2TR_LEN>();
+        let bytes = desc.to_fixed_payload_bytes::<P2TR_LEN>();
         assert_eq!(bytes.len(), P2TR_LEN);
     }
 
     #[test]
     fn test_p2pkh_fixed_bytes() {
         let desc = Descriptor::from_str("01b8268ce4d481413c4e848ff353cd16104291c45b").unwrap();
-        let bytes = desc.to_fixed_bytes::<P2PKH_LEN>();
+        let bytes = desc.to_fixed_payload_bytes::<P2PKH_LEN>();
         assert_eq!(bytes.len(), P2PKH_LEN);
     }
 }
