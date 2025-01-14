@@ -165,41 +165,16 @@ impl Descriptor {
         bytes
     }
 
-    /// Generates fixed bytes of length specified by the generic parameter.
-    /// # Example with P2PKH
+    /// Generates fixed bytes of payload of length specified by the generic parameter.
     ///
-    /// ```
-    /// # use std::str::FromStr;
-    /// #
-    /// # use bitcoin_bosd::Descriptor;
-    /// #
-    /// # fn main() {
-    /// let desc = Descriptor::from_str("01b8268ce4d481413c4e848ff353cd16104291c45b").unwrap();
-    /// let bytes = desc.to_fixed_payload_bytes::<20>();
-    /// assert_eq!(bytes.len(), 20);
-    /// # }
-    /// ```
+    /// # Notes
     ///
-    /// # Example with P2TR
-    ///
-    /// ```
-    /// # use std::str::FromStr;
-    /// # use hex::FromHex;
-    /// #
-    /// # use bitcoin_bosd::Descriptor;
-    /// #
-    /// # fn main() {
-    /// let raw = "040f0c8db753acbd17343a39c2f3f4e35e4be6da749f9e35137ab220e7b238a667";
-    /// let desc = Descriptor::from_str(raw).unwrap();
-    /// let bytes = desc.to_fixed_payload_bytes::<32>();
-    /// assert_eq!(bytes.len(), 32);
-    /// # assert_eq!(bytes.as_slice(), &Vec::from_hex(raw).unwrap()[1..]);
-    /// # }
-    /// ```
-    pub fn to_fixed_payload_bytes<const B: usize>(&self) -> [u8; B] {
+    /// - This method is intended for internal use and relies on the caller
+    ///   ensuring that the payload's length matches the size `B`.
+    pub(crate) fn to_fixed_payload_bytes<const B: usize>(&self) -> [u8; B] {
+        debug_assert_eq!(self.payload().len(), B);
         let mut bytes = [0u8; B];
-        let len = self.payload().len().min(B);
-        bytes[..len].copy_from_slice(&self.payload()[..len]);
+        bytes[..].copy_from_slice(self.payload());
         bytes
     }
 
