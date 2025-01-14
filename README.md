@@ -16,19 +16,22 @@
 
 ## Specification
 
+> [!NOTE]
+> The full specification is available in
+> the [BOSD Specification](SPECIFICATION.md) document.
+
 BOSD uses a simple binary format consisting of
 a 1-byte type tag followed by a cryptographic payload.
 The format is designed to be compact
 and efficiently represent standard Bitcoin output types:
 
-| Type | Payload Len | Payload Interpretation |
-| ---- | ----------- | ---------------------- |
-| 0    | 0..=80      | `OP_RETURN` payload    |
-| 1    | 20          | P2PKH hash             |
-| 2    | 20          | P2SH hash              |
-| 3    | 20          | P2WPKH hash            |
-| 3    | 32          | P2WSH hash             |
-| 4    | 32          | P2TR X-only PubKey     |
+| Type | Payload Length(s) | Payload Interpretation | Spend Type    | Mainnet Address Prefix |
+| ---- | ----------------- | ---------------------- | ------------- | ---------------------- |
+| 0    | ..=80             | `OP_RETURN` payload    | (N/A)         | (N/A)                  |
+| 1    | 20                | pubkey hash            | P2PKH         | `1...`                 |
+| 2    | 20                | script hash            | P2SH          | `3...`                 |
+| 3    | 20, 32            | SegWit v0 hash         | P2WPKH, P2WSH | `bc1q...`              |
+| 4    | 32                | SegWit v1 public key   | P2TR          | `bc1p...`              |
 
 ## Examples
 
@@ -68,52 +71,6 @@ let borsh_bytes = borsh::to_vec(&desc)?;
 | `address` |    ✓     | Adds Bitcoin [`Address`](https://docs.rs/bitcoin/latest/bitcoin/struct.Address.html) and [`ScriptBuf`](https://docs.rs/bitcoin/latest/bitcoin/struct.ScriptBuf.html) functionality |
 | `borsh`   |          | Adds descriptor serialization and deserialization via [`borsh`](https://borsh.io)                                                                                                  |
 | `serde`   |    ✓     | Adds descriptor serialization and deserialization via [`serde`](https://serde.rs)                                                                                                  |
-
-## Rationale
-
-There doesn't exist any general standard way to encode arbitrary relay-safe
-outputs. But we want to support creating a wide range of output types
-(any address and also `OP_RETURN`s) in withdrawal outputs.
-
-While we can solve this using
-(note that we're referring to
-[`rust-bitcoin`](https://github.com/rust-bitcoin/rust-bitcoin/)
-types)
-
-- `Address` + something extra for `OP_RETURN`:
-  The main issue with this is that it's inefficient since it involves linear
-  overhead for the error correction, plus some constant overhead for the network
-  tag and other framing bytes (like `1` in bech32). There's also some debate that
-  could be had over how `OP_RETURN` ought to work here.
-
-  `Address` is a user-facing type that represents a decoded form of what's
-  represented by _addresses_ specifically, but we're looking for something that
-  represents that gets included in transactions.
-
-  We would _like_ to use something like `AddressData`, but this is more of an
-  internal type and doesn't have any serializable representation.
-
-- Use `ScriptBuf` directly:
-  This permits non-standard outputs which aren't relay-safe. We want to constrain
-  ourselves to standard outputs as that could result in users having a hard
-  time getting a non-standard transaction included. This could be seen as a griefing
-  attack.
-
-  We could constrain ourselves to only permit a subset of `ScriptBuf`s, but this
-  is messy and feels like it runs afoul of the "parse don't validate" principle
-  that Rust and other strong-typed languages encourages.
-
-  It can also be a very serious footgun to easily lose funds by sending them
-  into the unrecoverable void.
-
-### Design Requirements
-
-So looking at these constraints we can say that we have these requirements:
-
-- must not involve error correction/detection overheads;
-- must not include network-related data that's redundant based on context; and
-- is a bijection with some sane "relay safe subset" of `ScriptBuf`s,
-  corresponding to both textual addresses and including `OP_RETURN`s.
 
 ## Contributing
 
