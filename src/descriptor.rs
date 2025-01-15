@@ -291,11 +291,14 @@ mod tests {
         assert!(Descriptor::from_bytes(&bytes).is_err());
 
         // Only tag type byte
-        for tag in 1..=u8::MAX {
+        for tag in 0..=u8::MAX {
             let bytes = [tag];
 
             // An empty payload is currently invalid for all types except `OP_RETURN`
-            assert!(Descriptor::from_bytes(&bytes).is_err());
+            match tag {
+                OP_RETURN_TYPE_TAG => assert!(Descriptor::from_bytes(&bytes).is_ok()),
+                _ => assert!(Descriptor::from_bytes(&bytes).is_err()),
+            }
         }
 
         // Invalid type tag
@@ -315,6 +318,7 @@ mod tests {
         let bytes = [4; 34];
         assert!(Descriptor::from_bytes(&bytes).is_err());
     }
+
     #[test]
     fn descriptor_to_bytes() {
         let original: &[u8; 20] = &[
