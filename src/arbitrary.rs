@@ -1,8 +1,6 @@
 use arbitrary::{Arbitrary, Error, Result, Unstructured};
-use bitcoin::{
-    key::Keypair,
-    secp256k1::{Secp256k1, SecretKey},
-};
+use bitcoin::{key::Keypair, secp256k1::SecretKey};
+use secp256k1::SECP256K1; // Global context
 
 use crate::descriptor::{
     Descriptor, MAX_OP_RETURN_LEN, P2PKH_LEN, P2SH_LEN, P2TR_LEN, P2WPKH_LEN, P2WSH_LEN,
@@ -48,7 +46,6 @@ impl<'a> Arbitrary<'a> for Descriptor {
             }
             4 => {
                 // P2TR: Generate a valid X-only public key
-                let secp = Secp256k1::new();
                 let mut secret_bytes = [0u8; 32];
                 u.fill_buffer(&mut secret_bytes)?;
                 // Keep trying until we get a valid key
@@ -56,7 +53,7 @@ impl<'a> Arbitrary<'a> for Descriptor {
                     u.fill_buffer(&mut secret_bytes)?;
                 }
                 let secret_key = SecretKey::from_slice(&secret_bytes).unwrap();
-                let keypair = Keypair::from_secret_key(&secp, &secret_key);
+                let keypair = Keypair::from_secret_key(SECP256K1, &secret_key);
                 let (x_only_pub_key, _parity) = keypair.x_only_public_key();
                 let bytes = x_only_pub_key.serialize().to_vec();
                 assert_eq!(bytes.len(), P2TR_LEN);

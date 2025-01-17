@@ -66,6 +66,7 @@ dependencies = [
  "borsh",
  "hex-conservative",
  "rand_core",
+ "secp256k1",
  "serde",
  "serde_json",
  "thiserror",
