@@ -15,6 +15,8 @@
 
 #[cfg(feature = "address")]
 pub mod address;
+#[cfg(all(feature = "arbitrary", feature = "address"))]
+pub mod arbitrary;
 #[cfg(feature = "borsh")]
 pub mod borsh;
 pub mod descriptor;

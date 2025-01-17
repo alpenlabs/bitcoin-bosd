@@ -18,8 +18,10 @@ default = ["address", "serde"]
 address = ["dep:bitcoin"]
 serde = ["dep:serde"]
 borsh = ["dep:borsh"]
+arbitrary = ["dep:arbitrary"]
 
 [dependencies]
+arbitrary = { version = "1.4.1", optional = true }
 bitcoin = { version = "0.32.5", optional = true }
 borsh = { version = "1.5.3", optional = true }
 hex = { package = "hex-conservative", version = "0.2.1" } # for optimization keep in sync with bitcoin

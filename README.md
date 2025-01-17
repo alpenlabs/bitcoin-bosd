@@ -66,11 +66,12 @@ let borsh_bytes = borsh::to_vec(&desc)?;
 
 ## Features
 
-| Feature   | Default? | Description                                                                                                                                                                        |
-| :-------- | :------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `address` |    ✓     | Adds Bitcoin [`Address`](https://docs.rs/bitcoin/latest/bitcoin/struct.Address.html) and [`ScriptBuf`](https://docs.rs/bitcoin/latest/bitcoin/struct.ScriptBuf.html) functionality |
-| `borsh`   |          | Adds descriptor serialization and deserialization via [`borsh`](https://borsh.io)                                                                                                  |
-| `serde`   |    ✓     | Adds descriptor serialization and deserialization via [`serde`](https://serde.rs)                                                                                                  |
+| Feature     | Default? |   standalone    | Description                                                                                                                                                                        |
+| :---------- | :------: | :-------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `address`   |    ✓     |        ✓        | Adds Bitcoin [`Address`](https://docs.rs/bitcoin/latest/bitcoin/struct.Address.html) and [`ScriptBuf`](https://docs.rs/bitcoin/latest/bitcoin/struct.ScriptBuf.html) functionality |
+| `arbitrary` |          | needs `address` | Adds [`Arbitrary`](https://docs.rs/arbitrary/) to generate random descriptors for fuzzing and property testing                                                                     |
+| `borsh`     |          |        ✓        | Adds descriptor serialization and deserialization via [`borsh`](https://borsh.io)                                                                                                  |
+| `serde`     |    ✓     |        ✓        | Adds descriptor serialization and deserialization via [`serde`](https://serde.rs)                                                                                                  |
 
 ## Contributing
 
