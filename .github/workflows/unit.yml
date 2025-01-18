@@ -38,7 +38,7 @@ jobs:
 
       - name: Run tests
         run: |
-          cargo --locked nextest run
+          cargo --locked nextest run --all-features
 
   doc:
     name: Run doc tests
@@ -58,7 +58,7 @@ jobs:
           cache-on-failure: true
 
       - name: Run doctests
-        run: cargo test --doc
+        run: cargo test --doc --all-features
 
   unit-success:
     name: Check that unit tests pass
