@@ -86,7 +86,7 @@ mod tests {
         const N: usize = 1_000;
 
         // Create a buffer of random bytes
-        // 128 bytes would be enough since it is below MAX_OP_RETURN_LEN
+        // 128 bytes would be enough since it is above MAX_OP_RETURN_LEN
         let mut data = vec![0u8; N * 128];
         OsRng.fill_bytes(&mut data);
         let mut u = Unstructured::new(&data);
@@ -113,7 +113,7 @@ mod tests {
         const N: usize = 1_000;
 
         // Create a buffer of random bytes
-        // 128 bytes would be enough since it is below MAX_OP_RETURN_LEN
+        // 128 bytes would be enough since it is above MAX_OP_RETURN_LEN
         let mut data = vec![0u8; N * 128];
         OsRng.fill_bytes(&mut data);
         let mut u = Unstructured::new(&data);
