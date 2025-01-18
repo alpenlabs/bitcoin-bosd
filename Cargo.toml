@@ -15,10 +15,10 @@ keywords = ["crypto", "bitcoin"]
 
 [features]
 default = ["address", "serde"]
-address = ["dep:bitcoin", "dep:secp256k1"]
+address = ["dep:bitcoin"]
 serde = ["dep:serde"]
 borsh = ["dep:borsh"]
-arbitrary = ["dep:arbitrary"]
+arbitrary = ["dep:arbitrary", "dep:secp256k1"]
 
 [dependencies]
 arbitrary = { version = "1.4.1", optional = true }
