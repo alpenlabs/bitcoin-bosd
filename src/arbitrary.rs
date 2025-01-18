@@ -82,13 +82,17 @@ mod tests {
 
     #[test]
     fn test_arbitrary_descriptor() {
+        // Number of iterations
+        const N: usize = 1_000;
+
         // Create a buffer of random bytes
-        let mut data = vec![0u8; 1024];
+        // 128 bytes would be enough since it is below MAX_OP_RETURN_LEN
+        let mut data = vec![0u8; N * 128];
         OsRng.fill_bytes(&mut data);
         let mut u = Unstructured::new(&data);
 
         // Generate several random descriptors
-        for _ in 0..1_000 {
+        for _ in 0..N {
             if let Ok(desc) = Descriptor::arbitrary(&mut u) {
                 // Verify type tag is valid
                 match desc.type_tag() {
@@ -105,13 +109,17 @@ mod tests {
 
     #[test]
     fn test_arbitrary_descriptor_to_address() {
+        // Number of iterations
+        const N: usize = 1_000;
+
         // Create a buffer of random bytes
-        let mut data = vec![0u8; 1024];
+        // 128 bytes would be enough since it is below MAX_OP_RETURN_LEN
+        let mut data = vec![0u8; N * 128];
         OsRng.fill_bytes(&mut data);
         let mut u = Unstructured::new(&data);
 
         // Generate several random descriptors
-        for _ in 0..1_000 {
+        for _ in 0..N {
             if let Ok(desc) = Descriptor::arbitrary(&mut u) {
                 // Verify type tag is valid
                 match desc.type_tag() {
