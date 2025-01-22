@@ -233,6 +233,25 @@ impl Descriptor {
         }
     }
 
+    /// Constructs a new [`Descriptor`] from a P2WSH payload.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType};
+    /// let payload = [0u8; 32]; // all zeros, don't use in production
+    /// let desc = Descriptor::new_p2wsh(&payload);
+    /// # assert_eq!(desc.type_tag(), DescriptorType::P2wsh);
+    /// # assert_eq!(desc.payload(), [0u8; 32]);
+    /// ```
+    pub fn new_p2wsh(payload: &[u8; 32]) -> Self {
+        let type_tag = DescriptorType::P2wsh;
+        Self {
+            type_tag,
+            payload: payload.to_vec(),
+        }
+    }
+
     /// Returns the bytes representation of the descriptor.
     ///
     /// That is:
