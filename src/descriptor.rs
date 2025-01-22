@@ -158,14 +158,14 @@ impl Descriptor {
 
     /// Constructs a new [`Descriptor`] from an `OP_RETURN` payload.
     ///
-    /// The payload is expected to be less than 80 bytes.
+    /// The payload is expected to be at most 80 bytes.
     ///
     /// # Example
     ///
     /// ```
     /// # use bitcoin_bosd::{Descriptor, DescriptorType};
     /// let payload = b"hello world";
-    /// let desc = Descriptor::new_op_return(payload).expect("valid payload under 80 bytes");
+    /// let desc = Descriptor::new_op_return(payload).expect("valid payload that is at most 80 bytes");
     /// # assert_eq!(desc.type_tag(), DescriptorType::OpReturn);
     /// # assert_eq!(desc.payload(), b"hello world");
     /// ```
