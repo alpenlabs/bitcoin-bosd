@@ -154,6 +154,8 @@ impl Descriptor {
 
     /// Constructs a new [`Descriptor`] from an `OP_RETURN` payload.
     ///
+    /// The payload is expected to be less than 80 bytes.
+    ///
     /// # Example
     ///
     /// ```
@@ -178,6 +180,8 @@ impl Descriptor {
 
     /// Constructs a new [`Descriptor`] from a P2PKH payload.
     ///
+    /// The payload is expected to be a valid 20-byte hash.
+    ///
     /// # Example
     ///
     /// ```
@@ -196,6 +200,8 @@ impl Descriptor {
     }
 
     /// Constructs a new [`Descriptor`] from a P2SH payload.
+    ///
+    /// The payload is expected to be a valid 20-byte hash.
     ///
     /// # Example
     ///
@@ -216,6 +222,8 @@ impl Descriptor {
 
     /// Constructs a new [`Descriptor`] from a P2WPKH payload.
     ///
+    /// The payload is expected to be a valid 20-byte hash.
+    ///
     /// # Example
     ///
     /// ```
@@ -235,6 +243,8 @@ impl Descriptor {
 
     /// Constructs a new [`Descriptor`] from a P2WSH payload.
     ///
+    /// The payload is expected to be a valid 32-byte hash.
+    ///
     /// # Example
     ///
     /// ```
@@ -253,6 +263,8 @@ impl Descriptor {
     }
 
     /// Constructs a new [`Descriptor`] from a P2TR payload.
+    ///
+    /// The payload is expected to be a valid 32-byte X-only public key.
     ///
     /// # Example
     ///
