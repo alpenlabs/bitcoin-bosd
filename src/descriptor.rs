@@ -152,6 +152,30 @@ impl Descriptor {
         Self::from_bytes(&bytes)
     }
 
+    /// Constructs a new [`Descriptor`] from an `OP_RETURN` payload.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType};
+    /// let payload = b"hello world";
+    /// let desc = Descriptor::new_op_return(payload).expect("valid payload under 80 bytes");
+    /// # assert_eq!(desc.type_tag(), DescriptorType::OpReturn);
+    /// # assert_eq!(desc.payload(), b"hello world");
+    /// ```
+    pub fn new_op_return(payload: &[u8]) -> Result<Self, DescriptorError> {
+        let type_tag = DescriptorType::OpReturn;
+        let payload_len = payload.len();
+        if payload_len > MAX_OP_RETURN_LEN {
+            Err(DescriptorError::InvalidPayloadLength(payload_len))
+        } else {
+            Ok(Self {
+                type_tag,
+                payload: payload.to_vec(),
+            })
+        }
+    }
+
     /// Returns the bytes representation of the descriptor.
     ///
     /// That is:
