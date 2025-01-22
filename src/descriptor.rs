@@ -176,6 +176,25 @@ impl Descriptor {
         }
     }
 
+    /// Constructs a new [`Descriptor`] from a P2PKH payload.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType};
+    /// let payload = [0u8; 20]; // all zeros, don't use in production
+    /// let desc = Descriptor::new_p2pkh(&payload);
+    /// # assert_eq!(desc.type_tag(), DescriptorType::P2pkh);
+    /// # assert_eq!(desc.payload(), [0u8; 20]);
+    /// ```
+    pub fn new_p2pkh(payload: &[u8; 20]) -> Self {
+        let type_tag = DescriptorType::P2pkh;
+        Self {
+            type_tag,
+            payload: payload.to_vec(),
+        }
+    }
+
     /// Returns the bytes representation of the descriptor.
     ///
     /// That is:
