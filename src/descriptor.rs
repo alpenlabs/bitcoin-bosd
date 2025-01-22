@@ -70,8 +70,6 @@ pub struct Descriptor {
 impl Descriptor {
     /// Constructs a new [`Descriptor`] from a byte slice.
     ///
-    /// # Warning
-    ///
     /// Users are advised to use the `new_*` methods whenever possible.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, DescriptorError> {
         // We must have at least a type tag
@@ -152,8 +150,6 @@ impl Descriptor {
     }
 
     /// Constructs a new [`Descriptor`] from a byte [`Vec`].
-    ///
-    /// # Warning
     ///
     /// Users are advised to use the `new_*` methods whenever possible.
     pub fn from_vec(bytes: Vec<u8>) -> Result<Self, DescriptorError> {
