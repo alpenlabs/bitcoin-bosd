@@ -189,13 +189,13 @@ impl Descriptor {
     /// # Example
     ///
     /// ```
-    /// # use bitcoin_bosd::{Descriptor, DescriptorType};
-    /// let payload = [0u8; 20]; // all zeros, don't use in production
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType, descriptor::P2PKH_LEN};
+    /// let payload = [0u8; P2PKH_LEN]; // all zeros, don't use in production
     /// let desc = Descriptor::new_p2pkh(&payload);
     /// # assert_eq!(desc.type_tag(), DescriptorType::P2pkh);
-    /// # assert_eq!(desc.payload(), [0u8; 20]);
+    /// # assert_eq!(desc.payload(), [0u8; P2PKH_LEN]);
     /// ```
-    pub fn new_p2pkh(payload: &[u8; 20]) -> Self {
+    pub fn new_p2pkh(payload: &[u8; P2PKH_LEN]) -> Self {
         let type_tag = DescriptorType::P2pkh;
         Self {
             type_tag,
@@ -210,13 +210,13 @@ impl Descriptor {
     /// # Example
     ///
     /// ```
-    /// # use bitcoin_bosd::{Descriptor, DescriptorType};
-    /// let payload = [0u8; 20]; // all zeros, don't use in production
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType, descriptor::P2SH_LEN};
+    /// let payload = [0u8; P2SH_LEN]; // all zeros, don't use in production
     /// let desc = Descriptor::new_p2sh(&payload);
     /// # assert_eq!(desc.type_tag(), DescriptorType::P2sh);
-    /// # assert_eq!(desc.payload(), [0u8; 20]);
+    /// # assert_eq!(desc.payload(), [0u8; P2SH_LEN]);
     /// ```
-    pub fn new_p2sh(payload: &[u8; 20]) -> Self {
+    pub fn new_p2sh(payload: &[u8; P2SH_LEN]) -> Self {
         let type_tag = DescriptorType::P2sh;
         Self {
             type_tag,
@@ -231,13 +231,13 @@ impl Descriptor {
     /// # Example
     ///
     /// ```
-    /// # use bitcoin_bosd::{Descriptor, DescriptorType};
-    /// let payload = [0u8; 20]; // all zeros, don't use in production
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType, descriptor::P2WPKH_LEN};
+    /// let payload = [0u8; P2WPKH_LEN]; // all zeros, don't use in production
     /// let desc = Descriptor::new_p2wpkh(&payload);
     /// # assert_eq!(desc.type_tag(), DescriptorType::P2wpkh);
-    /// # assert_eq!(desc.payload(), [0u8; 20]);
+    /// # assert_eq!(desc.payload(), [0u8; P2WPKH_LEN]);
     /// ```
-    pub fn new_p2wpkh(payload: &[u8; 20]) -> Self {
+    pub fn new_p2wpkh(payload: &[u8; P2WPKH_LEN]) -> Self {
         let type_tag = DescriptorType::P2wpkh;
         Self {
             type_tag,
@@ -252,13 +252,13 @@ impl Descriptor {
     /// # Example
     ///
     /// ```
-    /// # use bitcoin_bosd::{Descriptor, DescriptorType};
-    /// let payload = [0u8; 32]; // all zeros, don't use in production
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType, descriptor::P2WSH_LEN};
+    /// let payload = [0u8; P2WSH_LEN]; // all zeros, don't use in production
     /// let desc = Descriptor::new_p2wsh(&payload);
     /// # assert_eq!(desc.type_tag(), DescriptorType::P2wsh);
-    /// # assert_eq!(desc.payload(), [0u8; 32]);
+    /// # assert_eq!(desc.payload(), [0u8; P2WSH_LEN]);
     /// ```
-    pub fn new_p2wsh(payload: &[u8; 32]) -> Self {
+    pub fn new_p2wsh(payload: &[u8; P2WSH_LEN]) -> Self {
         let type_tag = DescriptorType::P2wsh;
         Self {
             type_tag,
@@ -273,13 +273,13 @@ impl Descriptor {
     /// # Example
     ///
     /// ```
-    /// # use bitcoin_bosd::{Descriptor, DescriptorType};
-    /// let payload = [0u8; 32]; // all zeros, don't use in production
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType, descriptor::P2TR_LEN};
+    /// let payload = [0u8; P2TR_LEN]; // all zeros, don't use in production
     /// let desc = Descriptor::new_p2tr(&payload);
     /// # assert_eq!(desc.type_tag(), DescriptorType::P2tr);
-    /// # assert_eq!(desc.payload(), [0u8; 32]);
+    /// # assert_eq!(desc.payload(), [0u8; P2TR_LEN]);
     /// ```
-    pub fn new_p2tr(payload: &[u8; 32]) -> Self {
+    pub fn new_p2tr(payload: &[u8; P2TR_LEN]) -> Self {
         let type_tag = DescriptorType::P2tr;
         Self {
             type_tag,
