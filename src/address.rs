@@ -14,8 +14,7 @@ use bitcoin::{
 
 use crate::{
     descriptor::{
-        P2PKH_LEN, P2PKH_TYPE_TAG, P2SH_LEN, P2SH_TYPE_TAG, P2TR_LEN, P2TR_TYPE_TAG, P2WPKH_LEN,
-        P2WPKH_P2WSH_TYPE_TAG, P2WSH_LEN,
+        P2PKH_LEN, P2SH_LEN, P2TR_LEN, P2TR_TYPE_TAG, P2WPKH_LEN, P2WPKH_P2WSH_TYPE_TAG, P2WSH_LEN,
     },
     Descriptor, DescriptorError,
     DescriptorType::*,
@@ -139,19 +138,11 @@ impl From<Address> for Descriptor {
         match address_data {
             // P2PKH
             AddressData::P2pkh { pubkey_hash } => {
-                let payload = pubkey_hash.as_raw_hash().to_byte_array();
-                let mut bytes = [0u8; 21];
-                bytes[0] = P2PKH_TYPE_TAG;
-                bytes[1..].copy_from_slice(&payload);
-                Descriptor::from_bytes(&bytes).expect("infallible")
+                Descriptor::new_p2pkh(&pubkey_hash.as_raw_hash().to_byte_array())
             }
             // P2SH
             AddressData::P2sh { script_hash } => {
-                let payload = script_hash.as_raw_hash().to_byte_array();
-                let mut bytes = [0u8; 21];
-                bytes[0] = P2SH_TYPE_TAG;
-                bytes[1..].copy_from_slice(&payload);
-                Descriptor::from_bytes(&bytes).expect("infallible")
+                Descriptor::new_p2sh(&script_hash.as_raw_hash().to_byte_array())
             }
             // SegWit V0/V1
             AddressData::Segwit { witness_program } => match witness_program.version() {
@@ -202,11 +193,7 @@ impl From<PubkeyHash> for Descriptor {
 
 impl From<ScriptHash> for Descriptor {
     fn from(script_hash: ScriptHash) -> Self {
-        let payload: &[u8; 20] = script_hash.as_ref();
-        let mut bytes = [0u8; 21];
-        bytes[0] = P2SH_TYPE_TAG;
-        bytes[1..].copy_from_slice(payload);
-        Descriptor::from_bytes(&bytes).expect("infallible")
+        Descriptor::new_p2sh(script_hash.as_ref())
     }
 }
 
