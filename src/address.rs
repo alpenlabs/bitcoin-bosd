@@ -194,6 +194,12 @@ impl From<Address> for Descriptor {
     }
 }
 
+impl From<PubkeyHash> for Descriptor {
+    fn from(pubkey_hash: PubkeyHash) -> Self {
+        Descriptor::new_p2pkh(pubkey_hash.as_ref())
+    }
+}
+
 impl From<ScriptHash> for Descriptor {
     fn from(script_hash: ScriptHash) -> Self {
         let payload: &[u8; 20] = script_hash.as_ref();
@@ -441,6 +447,22 @@ mod tests {
 
         let script = desc.to_script();
         assert!(script.is_p2tr())
+    }
+
+    #[test]
+    fn from_pubkey_hash() {
+        // P2PKH
+        // Using 0x01 (type_tag) and a 20-byte hash
+        // Source: transaction 8bae12b5f4c088d940733dcd1455efc6a3a69cf9340e17a981286d3778615684
+        // Corresponds to address `1HnhWpkMHMjgt167kvgcPyurMmsCQ2WPgg`
+        let hash = "b8268ce4d481413c4e848ff353cd16104291c45b";
+        let hash = hash.parse::<PubkeyHash>().unwrap();
+        let desc = Descriptor::from(hash);
+        assert_eq!(desc.type_tag(), P2pkh);
+
+        let address = Address::p2pkh(hash, Network::Bitcoin);
+        let address_translated = desc.to_address(Network::Bitcoin).unwrap();
+        assert_eq!(address, address_translated);
     }
 
     #[test]
