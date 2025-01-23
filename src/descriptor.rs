@@ -269,7 +269,7 @@ impl Descriptor {
         }
     }
 
-    /// Constructs a new [`Descriptor`] from an *unckecked* P2TR payload.
+    /// Constructs a new [`Descriptor`] from an _unchecked_ P2TR payload.
     ///
     /// The payload is expected to be a valid 32-byte X-only public key and the user should
     /// be responsible for validating the key.
