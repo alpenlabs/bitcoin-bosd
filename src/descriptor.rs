@@ -269,32 +269,54 @@ impl Descriptor {
         }
     }
 
-    /// Constructs a new [`Descriptor`] from a P2TR payload.
+    /// Constructs a new [`Descriptor`] from an *unckecked* P2TR payload.
     ///
-    /// The payload is expected to be a valid 32-byte X-only public key.
+    /// The payload is expected to be a valid 32-byte X-only public key and the user should
+    /// be responsible for validating the key.
     ///
     /// # Example
     ///
     /// ```
     /// # use bitcoin_bosd::{Descriptor, DescriptorType, descriptor::P2TR_LEN};
     /// let payload = [2u8; P2TR_LEN]; // valid X-only public key, but don't use in production
-    /// let desc = Descriptor::new_p2tr(&payload);
+    /// let desc = Descriptor::new_p2tr_unchecked(&payload);
     /// # assert_eq!(desc.type_tag(), DescriptorType::P2tr);
     /// # assert_eq!(desc.payload(), [2u8; P2TR_LEN]);
     /// ```
-    pub fn new_p2tr(payload: &[u8; P2TR_LEN]) -> Self {
+    pub fn new_p2tr_unchecked(payload: &[u8; P2TR_LEN]) -> Self {
         let type_tag = DescriptorType::P2tr;
-
-        // If using `rust-bitcoin` then we can validate internally the X-only public key.
-        #[cfg(feature = "address")]
-        assert!(
-            XOnlyPublicKey::from_slice(payload).is_ok(),
-            "payload is not a valid X-only public key!"
-        );
 
         Self {
             type_tag,
             payload: payload.to_vec(),
+        }
+    }
+
+    /// Constructs a new [`Descriptor`] from a P2TR payload.
+    ///
+    /// The payload is expected to be a valid 32-byte X-only public key.
+    /// Otherwise the function will return an error.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use bitcoin_bosd::{Descriptor, DescriptorType, descriptor::P2TR_LEN};
+    /// let payload = [2u8; P2TR_LEN]; // valid X-only public key, but don't use in production
+    /// let desc = Descriptor::new_p2tr(&payload).expect("valid X-only public key");
+    /// # assert_eq!(desc.type_tag(), DescriptorType::P2tr);
+    /// # assert_eq!(desc.payload(), [2u8; P2TR_LEN]);
+    /// ```
+    #[cfg(feature = "address")]
+    pub fn new_p2tr(payload: &[u8; P2TR_LEN]) -> Result<Self, DescriptorError> {
+        let type_tag = DescriptorType::P2tr;
+
+        if XOnlyPublicKey::from_slice(payload).is_err() {
+            Err(DescriptorError::InvalidXOnlyPublicKey)
+        } else {
+            Ok(Self {
+                type_tag,
+                payload: payload.to_vec(),
+            })
         }
     }
 
@@ -611,9 +633,13 @@ mod tests {
 
     #[cfg(feature = "address")]
     #[test]
-    #[should_panic(expected = "payload is not a valid X-only public key!")]
     fn invalid_new_p2tr() {
         let invalid_payload = [0; P2TR_LEN];
-        let _ = Descriptor::new_p2tr(&invalid_payload);
+        let result = Descriptor::new_p2tr(&invalid_payload);
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap(),
+            DescriptorError::InvalidXOnlyPublicKey
+        );
     }
 }

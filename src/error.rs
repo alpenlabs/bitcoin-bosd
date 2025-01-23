@@ -25,6 +25,11 @@ pub enum DescriptorError {
     #[error("invalid payload length: {0}")]
     InvalidPayloadLength(usize),
 
+    /// Invalid X-only public key.
+    #[cfg(feature = "address")]
+    #[error("invalid X-only public key")]
+    InvalidXOnlyPublicKey,
+
     /// Hex decoding error.
     #[error("hex decoding error: {0}")]
     HexDecodingError(#[from] HexToBytesError),
