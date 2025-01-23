@@ -13,6 +13,9 @@ use std::{
 
 use hex::{DisplayHex, FromHex};
 
+#[cfg(feature = "address")]
+use bitcoin::XOnlyPublicKey;
+
 use crate::error::DescriptorError;
 
 /// `OP_RETURN` type tag.
@@ -274,13 +277,21 @@ impl Descriptor {
     ///
     /// ```
     /// # use bitcoin_bosd::{Descriptor, DescriptorType, descriptor::P2TR_LEN};
-    /// let payload = [0u8; P2TR_LEN]; // all zeros, don't use in production
+    /// let payload = [2u8; P2TR_LEN]; // valid X-only public key, but don't use in production
     /// let desc = Descriptor::new_p2tr(&payload);
     /// # assert_eq!(desc.type_tag(), DescriptorType::P2tr);
-    /// # assert_eq!(desc.payload(), [0u8; P2TR_LEN]);
+    /// # assert_eq!(desc.payload(), [2u8; P2TR_LEN]);
     /// ```
     pub fn new_p2tr(payload: &[u8; P2TR_LEN]) -> Self {
         let type_tag = DescriptorType::P2tr;
+
+        // If using `rust-bitcoin` then we can validate internally the X-only public key.
+        #[cfg(feature = "address")]
+        assert!(
+            XOnlyPublicKey::from_slice(payload).is_ok(),
+            "payload is not a valid X-only public key!"
+        );
+
         Self {
             type_tag,
             payload: payload.to_vec(),
@@ -596,5 +607,13 @@ mod tests {
         let desc = Descriptor::from_str("01b8268ce4d481413c4e848ff353cd16104291c45b").unwrap();
         let bytes = desc.to_fixed_payload_bytes::<P2PKH_LEN>();
         assert_eq!(bytes.len(), P2PKH_LEN);
+    }
+
+    #[cfg(feature = "address")]
+    #[test]
+    #[should_panic(expected = "payload is not a valid X-only public key!")]
+    fn invalid_new_p2tr() {
+        let invalid_payload = [0; P2TR_LEN];
+        let _ = Descriptor::new_p2tr(&invalid_payload);
     }
 }
