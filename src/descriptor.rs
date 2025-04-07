@@ -86,7 +86,7 @@ impl Descriptor {
 
         // Validate the payload length against the type
         match type_tag {
-            // OP_RETURN should be less than 80 bytes.
+            // OP_RETURN must be at most 80 bytes.
             OP_RETURN_TYPE_TAG => {
                 let payload_len = payload.len();
                 if payload_len > MAX_OP_RETURN_LEN {
@@ -98,7 +98,7 @@ impl Descriptor {
                     })
                 }
             }
-            // P2PKH and P2SH should be all 20 bytes.
+            // P2PKH and P2SH must be exactly 20 bytes.
             P2PKH_TYPE_TAG => {
                 let payload_len = payload.len();
                 if payload_len != P2PKH_LEN {
@@ -121,7 +121,7 @@ impl Descriptor {
                     })
                 }
             }
-            // P2WPKH should be 20 bytes and P2SH should be 32 bytes.
+            // P2WPKH must be exactly 20 bytes, and P2SH must be exactly 32 bytes.
             P2WPKH_P2WSH_TYPE_TAG => {
                 let payload_len = payload.len();
                 match payload_len {
@@ -136,7 +136,7 @@ impl Descriptor {
                     _ => Err(DescriptorError::InvalidPayloadLength(payload_len)),
                 }
             }
-            // P2TR should be 32 bytes.
+            // P2TR must be exactly 32 bytes.
             P2TR_TYPE_TAG => {
                 let payload_len = payload.len();
                 if payload_len != P2TR_LEN {
@@ -271,8 +271,8 @@ impl Descriptor {
 
     /// Constructs a new [`Descriptor`] from an _unchecked_ P2TR payload.
     ///
-    /// The payload is expected to be a valid 32-byte X-only public key and the user should
-    /// be responsible for validating the key.
+    /// The payload is expected to be a valid 32-byte X-only public key.
+    /// You _must_ validate this key on your own; this function will not do it for you.
     ///
     /// # Example
     ///
@@ -294,8 +294,8 @@ impl Descriptor {
 
     /// Constructs a new [`Descriptor`] from a P2TR payload.
     ///
-    /// The payload is expected to be a valid 32-byte X-only public key.
-    /// Otherwise the function will return an error.
+    /// The payload is expected to be a valid 32-byte X-only public key.A
+    /// This function will validate this key for you, and return an error if validation fails.
     ///
     /// # Example
     ///
