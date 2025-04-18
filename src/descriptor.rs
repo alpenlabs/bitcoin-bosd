@@ -75,14 +75,8 @@ impl Descriptor {
     ///
     /// Users are advised to use the `new_*` methods whenever possible.
     pub fn from_bytes(bytes: &[u8]) -> Result<Self, DescriptorError> {
-        // We must have at least a type tag
-        let type_tag = *bytes.first().ok_or(DescriptorError::MissingTypeTag)?;
-
-        // Extract the payload, which could be empty
-        let payload = match bytes.get(1..) {
-            Some(payload) => payload.to_vec(),
-            None => Vec::new(),
-        };
+        // Extract the type tag (which must exist) and the payload
+        let (&type_tag, payload) = bytes.split_first().ok_or(DescriptorError::MissingTypeTag)?;
 
         // Validate the payload length against the type
         match type_tag {
@@ -94,7 +88,7 @@ impl Descriptor {
                 } else {
                     Ok(Self {
                         type_tag: DescriptorType::OpReturn,
-                        payload,
+                        payload: payload.to_vec(),
                     })
                 }
             }
@@ -106,7 +100,7 @@ impl Descriptor {
                 } else {
                     Ok(Self {
                         type_tag: DescriptorType::P2pkh,
-                        payload,
+                        payload: payload.to_vec(),
                     })
                 }
             }
@@ -117,7 +111,7 @@ impl Descriptor {
                 } else {
                     Ok(Self {
                         type_tag: DescriptorType::P2sh,
-                        payload,
+                        payload: payload.to_vec(),
                     })
                 }
             }
@@ -127,11 +121,11 @@ impl Descriptor {
                 match payload_len {
                     P2WPKH_LEN => Ok(Self {
                         type_tag: DescriptorType::P2wpkh,
-                        payload,
+                        payload: payload.to_vec(),
                     }),
                     P2WSH_LEN => Ok(Self {
                         type_tag: DescriptorType::P2wsh,
-                        payload,
+                        payload: payload.to_vec(),
                     }),
                     _ => Err(DescriptorError::InvalidPayloadLength(payload_len)),
                 }
@@ -144,7 +138,7 @@ impl Descriptor {
                 } else {
                     Ok(Self {
                         type_tag: DescriptorType::P2tr,
-                        payload,
+                        payload: payload.to_vec(),
                     })
                 }
             }
