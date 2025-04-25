@@ -29,7 +29,7 @@ impl BorshDeserialize for Descriptor {
         Descriptor::from_vec(bytes).map_err(|e| {
             io::Error::new(
                 io::ErrorKind::InvalidData,
-                format!("Invalid descriptor: {}", e),
+                format!("Invalid descriptor: {e}"),
             )
         })
     }
