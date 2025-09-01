@@ -21,7 +21,7 @@ borsh = ["dep:borsh"]
 arbitrary = ["dep:arbitrary", "dep:secp256k1"]
 
 [dependencies]
-arbitrary = { version = "1.4.1", optional = true }
+arbitrary = { version = "1.4.2", optional = true }
 bitcoin = { version = "0.32.7", optional = true }
 borsh = { version = "1.5.7", optional = true }
 hex = { package = "hex-conservative", version = "0.2.1" } # for optimization keep in sync with bitcoin
