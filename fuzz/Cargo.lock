@@ -32,9 +32,9 @@ checksum = "d965446196e3b7decd44aa7ee49e31d630118f90ef12f97900f262eb915c951d"
 
 [[package]]
 name = "bitcoin"
-version = "0.32.5"
+version = "0.32.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ce6bc65742dea50536e35ad42492b234c27904a27f0abdcbce605015cb4ea026"
+checksum = "0fda569d741b895131a88ee5589a467e73e9c4718e958ac9308e4f7dc44b6945"
 dependencies = [
  "base58ck",
  "bech32",
@@ -49,7 +49,7 @@ dependencies = [
 
 [[package]]
 name = "bitcoin-bosd"
-version = "0.0.0"
+version = "0.4.2"
 dependencies = [
  "bitcoin",
  "hex-conservative",
