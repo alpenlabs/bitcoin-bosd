@@ -266,6 +266,47 @@ mod tests {
 
     use super::*;
 
+    #[cfg(test)]
+    mod proptest_tests {
+        use super::*;
+        use crate::descriptor::{DescriptorType, MAX_OP_RETURN_LEN};
+        use proptest::prelude::*;
+
+        proptest! {
+            /// Test that `OP_RETURN` descriptors convert to valid scripts.
+            #[test]
+            fn op_return_script_property(data in prop::collection::vec(any::<u8>(), 0..=MAX_OP_RETURN_LEN)) {
+                if data.len() <= MAX_OP_RETURN_LEN {
+                    let mut bytes = vec![0u8; data.len() + 1];
+                    bytes[0] = 0; // OP_RETURN type tag
+                    bytes[1..].copy_from_slice(&data);
+
+                    let descriptor = Descriptor::from_bytes(&bytes).expect("valid OP_RETURN should parse");
+                    let script = descriptor.to_script();
+                    assert!(script.is_op_return());
+                }
+            }
+
+            /// Test that `OP_RETURN` descriptors cannot be converted to addresses.
+            #[test]
+            fn op_return_address_error_property(data in prop::collection::vec(any::<u8>(), 0..=MAX_OP_RETURN_LEN)) {
+                if data.len() <= MAX_OP_RETURN_LEN {
+                    let mut bytes = vec![0u8; data.len() + 1];
+                    bytes[0] = 0; // OP_RETURN type tag
+                    bytes[1..].copy_from_slice(&data);
+
+                    let descriptor = Descriptor::from_bytes(&bytes).expect("valid OP_RETURN should parse");
+                    let address_result = descriptor.to_address(Network::Bitcoin);
+                    assert!(address_result.is_err());
+                    assert_eq!(
+                        address_result.err().unwrap(),
+                        DescriptorError::InvalidAddressConversion(DescriptorType::OpReturn)
+                    );
+                }
+            }
+        }
+    }
+
     #[test]
     fn p2pkh() {
         // P2PKH

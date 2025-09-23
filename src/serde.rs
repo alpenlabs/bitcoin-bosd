@@ -53,6 +53,37 @@ mod tests {
     use crate::DescriptorType;
     use std::str::FromStr;
 
+    #[cfg(test)]
+    mod proptest_tests {
+        use super::*;
+        use crate::descriptor::MAX_OP_RETURN_LEN;
+        use proptest::prelude::*;
+
+        proptest! {
+            /// Test that `OP_RETURN` descriptors serialize/deserialize correctly.
+            #[test]
+            fn op_return_serialization_roundtrip_property(data in prop::collection::vec(any::<u8>(), 0..=MAX_OP_RETURN_LEN)) {
+                if data.len() <= MAX_OP_RETURN_LEN {
+                    let mut bytes = vec![0u8; data.len() + 1];
+                    bytes[0] = 0; // OP_RETURN type tag
+                    bytes[1..].copy_from_slice(&data);
+
+                    let descriptor = Descriptor::from_bytes(&bytes).expect("valid OP_RETURN should parse");
+
+                    // Test JSON serialization
+                    let json_serialized = serde_json::to_string(&descriptor).unwrap();
+                    let json_deserialized: Descriptor = serde_json::from_str(&json_serialized).unwrap();
+                    assert_eq!(descriptor, json_deserialized);
+
+                    // Test bincode serialization
+                    let bincode_serialized = bincode::serialize(&descriptor).unwrap();
+                    let bincode_deserialized: Descriptor = bincode::deserialize(&bincode_serialized).unwrap();
+                    assert_eq!(descriptor, bincode_deserialized);
+                }
+            }
+        }
+    }
+
     /// Helper function to test both JSON and bincode serialization.
     fn test_roundtrip(descriptor: &Descriptor) {
         // JSON (human-readable) serialization
