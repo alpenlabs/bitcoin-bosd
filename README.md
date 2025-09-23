@@ -27,7 +27,7 @@ and efficiently represent standard Bitcoin output types:
 
 | Type | Payload Length(s) | Payload Interpretation | Spend Type    | Mainnet Address Prefix |
 | ---- | ----------------- | ---------------------- | ------------- | ---------------------- |
-| 0    | ..=80             | `OP_RETURN` payload    | (N/A)         | (N/A)                  |
+| 0    | ..=100_000        | `OP_RETURN` payload    | (N/A)         | (N/A)                  |
 | 1    | 20                | pubkey hash            | P2PKH         | `1...`                 |
 | 2    | 20                | script hash            | P2SH          | `3...`                 |
 | 3    | 20, 32            | SegWit v0 hash         | P2WPKH, P2WSH | `bc1q...`              |
@@ -40,7 +40,7 @@ and efficiently represent standard Bitcoin output types:
 - SegWit V1 (P2TR) bech32m mainnet address given a 32-byte X-only public key:
   `041234123412341234123412341234123412341234123412341234123412341234`
   $\iff$ `bc1pzg6pydqjxsfrgy35zg6pydqjxsfrgy35zg6pydqjxsfrgy35zg6qf6d5se`
-- `OP_RETURN` payload given a hex string that is less than 80 bytes:
+- `OP_RETURN` payload given a hex string that is less than 100KB:
   `00deadbeefcafebabe` $\iff$ `RETURN PUSHDATA(deadbeefcafebabe)`
 
 ## Usage

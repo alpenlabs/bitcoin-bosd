@@ -7,7 +7,7 @@
 //!
 //! | Type | Payload Length(s) | Payload Interpretation | Spend Type    | Mainnet Address Prefix |
 //! | ---- | ----------------- | ---------------------- | ------------- | ---------------------- |
-//! | 0    | ..=80             | `OP_RETURN` payload    | (N/A)         | (N/A)                  |
+//! | 0    | ..=100,000        | `OP_RETURN` payload    | (N/A)         | (N/A)                  |
 //! | 1    | 20                | pubkey hash            | P2PKH         | `1...`                 |
 //! | 2    | 20                | script hash            | P2SH          | `3...`                 |
 //! | 3    | 20, 32            | SegWit v0 hash         | P2WPKH, P2WSH | `bc1q...`              |

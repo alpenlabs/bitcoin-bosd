@@ -24,7 +24,7 @@ use crate::error::DescriptorError;
 pub(crate) const OP_RETURN_TYPE_TAG: u8 = 0;
 
 /// Maximum length of `OP_RETURN` payload.
-pub const MAX_OP_RETURN_LEN: usize = 80;
+pub const MAX_OP_RETURN_LEN: usize = 100_000;
 
 /// `P2PKH` type tag.
 pub(crate) const P2PKH_TYPE_TAG: u8 = 1;
@@ -82,7 +82,7 @@ impl Descriptor {
 
         // Validate the payload length against the type
         match type_tag {
-            // OP_RETURN must be at most 80 bytes.
+            // OP_RETURN must be at most 100KB.
             OP_RETURN_TYPE_TAG => {
                 let payload_len = payload.len();
                 if payload_len > MAX_OP_RETURN_LEN {
@@ -157,14 +157,14 @@ impl Descriptor {
 
     /// Constructs a new [`Descriptor`] from an `OP_RETURN` payload.
     ///
-    /// The payload is expected to be at most 80 bytes.
+    /// The payload is expected to be at most 100KB.
     ///
     /// # Example
     ///
     /// ```
     /// # use bitcoin_bosd::{Descriptor, DescriptorType};
     /// let payload = b"hello world";
-    /// let desc = Descriptor::new_op_return(payload).expect("valid payload that is at most 80 bytes");
+    /// let desc = Descriptor::new_op_return(payload).expect("valid payload that is at most 100KB");
     /// # assert_eq!(desc.type_tag(), DescriptorType::OpReturn);
     /// # assert_eq!(desc.payload(), b"hello world");
     /// ```
@@ -483,8 +483,9 @@ mod tests {
         assert!(Descriptor::from_bytes(&bytes).is_err());
 
         // Invalid payload length
-        // OP_RETURN with 81 bytes
-        let bytes = [0; 82];
+        // OP_RETURN with 100001 bytes (MAX_OP_RETURN_LEN + 1)
+        let mut bytes = vec![0; 100_002]; // 1 byte type tag + 100001 bytes payload
+        bytes[0] = 0; // OP_RETURN type tag
         assert!(Descriptor::from_bytes(&bytes).is_err());
 
         // P2PKH with 19 bytes
@@ -610,9 +611,9 @@ mod tests {
         assert!(Descriptor::from_str(s).is_err());
 
         // Invalid payload length
-        // OP_RETURN with 81 bytes
-        let s = "00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000";
-        assert!(Descriptor::from_str(s).is_err());
+        // OP_RETURN with 100001 bytes (create a hex string with 100001*2 = 200002 hex chars)
+        let s = "00".to_string() + &"00".repeat(100_001);
+        assert!(Descriptor::from_str(&s).is_err());
 
         // P2PKH with 19 bytes
         let s = "0100000000000000000000000000000000000000";

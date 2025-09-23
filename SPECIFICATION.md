@@ -28,7 +28,7 @@ The structure consists of:
 
 - 1-byte tag representing a type ID.
 - Arbitrary-length cryptographic payload (although practically bounded to like
-  80 bytes).
+  100KB for OP_RETURN).
 
 We assume that we're parsing a descriptor from a container so that we don't need
 to explicitly specify the length of the payload and can assume it to be "the rest
@@ -44,7 +44,7 @@ context.
 
 | Type | Payload Length(s) | Payload Interpretation | Spend Type    | Mainnet Address Prefix |
 | ---- | ----------------- | ---------------------- | ------------- | ---------------------- |
-| 0    | ..=80             | `OP_RETURN` payload    | (N/A)         | (N/A)                  |
+| 0    | ..=100_000        | `OP_RETURN` payload    | (N/A)         | (N/A)                  |
 | 1    | 20                | pubkey hash            | P2PKH         | `1...`                 |
 | 2    | 20                | script hash            | P2SH          | `3...`                 |
 | 3    | 20, 32            | SegWit v0 hash         | P2WPKH, P2WSH | `bc1q...`              |
@@ -70,8 +70,8 @@ address there is exactly one unique way to represent it as a descriptor.
 In the event that the `OP_RETURN` payload limit is increased, then we would want
 to support that. In that scenario, we will introduce a new type ID specifically
 for the range between the currently-supported limit and the new limit. So a
-type 0 desc with a 81 byte payload would still be invalid. And a type k with a
-79 byte payload would similarly be invalid.
+type 0 desc with a 100_001 byte payload would still be invalid. And a type k with a
+99999 byte payload would similarly be invalid.
 
 ## Examples
 
