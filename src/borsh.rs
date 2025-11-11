@@ -132,6 +132,21 @@ mod tests {
     }
 
     #[test]
+    fn borsh_p2a() {
+        // P2A
+        // Using 0x04 (type_tag) and a 0-byte payload
+        // Source: transaction c054743f0f3ecfac2cf08c40c7dd36fcb38928cf8e07d179693ca2692d041848
+        // Corresponds to address `bc1pfeessrawgf`
+        let original = Descriptor::from_str("04").unwrap();
+
+        let serialized = to_vec(&original).unwrap();
+        let deserialized = Descriptor::try_from_slice(&serialized).unwrap();
+
+        assert_eq!(original, deserialized);
+        assert_eq!(deserialized.type_tag(), DescriptorType::P2a);
+    }
+
+    #[test]
     fn borsh_p2tr() {
         // P2TR
         // Using 0x04 (type_tag) and a 32-byte hash
