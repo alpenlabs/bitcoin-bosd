@@ -8,10 +8,10 @@
 //! | Type | Payload Length(s) | Payload Interpretation | Spend Type    | Mainnet Address Prefix |
 //! | ---- | ----------------- | ---------------------- | ------------- | ---------------------- |
 //! | 0    | ..=100_000        | `OP_RETURN` payload    | (N/A)         | (N/A)                  |
-//! | 1    | 20                | pubkey hash            | P2PKH         | `1...`                 |
-//! | 2    | 20                | script hash            | P2SH          | `3...`                 |
-//! | 3    | 20, 32            | SegWit v0 hash         | P2WPKH, P2WSH | `bc1q...`              |
-//! | 4    | 32                | SegWit v1 public key   | P2TR          | `bc1p...`              |
+//! | 1    | 20                | Pubkey Hash            | P2PKH         | `1...`                 |
+//! | 2    | 20                | Script Hash            | P2SH          | `3...`                 |
+//! | 3    | 20, 32            | SegWit v0 Hash         | P2WPKH, P2WSH | `bc1q...`              |
+//! | 4    | 0, 32             | SegWit v1 Public Key   | P2A, P2TR     | `bc1p...`              |
 
 #[cfg(feature = "address")]
 pub mod address;
