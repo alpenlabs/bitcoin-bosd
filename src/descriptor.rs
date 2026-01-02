@@ -65,7 +65,7 @@ pub const P2TR_LEN: usize = 32;
 ///
 /// See [the Bitcoin developer guide on Transactions](https://developer.bitcoin.org/devguide/transactions.html)
 /// for more information on standardness.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[repr(C)]
 pub struct Descriptor {
     /// The type of the descriptor.
@@ -406,7 +406,7 @@ impl FromStr for Descriptor {
 /// The type tag of a [`Descriptor`].
 ///
 /// This is the first byte of the payload.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 #[non_exhaustive] // Might need more in the future.
 pub enum DescriptorType {
     /// `OP_RETURN` payload.
