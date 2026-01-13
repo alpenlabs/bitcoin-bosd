@@ -5,7 +5,14 @@ use std::io;
 
 use borsh::{de::BorshDeserialize, ser::BorshSerialize};
 
-use crate::Descriptor;
+use crate::{descriptor::MAX_OP_RETURN_LEN, Descriptor};
+
+/// Maximum allowed descriptor length for Borsh deserialization.
+///
+/// This is set to [`MAX_OP_RETURN_LEN`] + 1 (99,995 bytes) to accommodate the largest
+/// valid descriptor (`OP_RETURN` with maximum payload) plus its type tag byte.
+/// This limit prevents unbounded memory allocation from malicious inputs.
+const MAX_DESCRIPTOR_LEN: usize = MAX_OP_RETURN_LEN + 1;
 
 impl BorshSerialize for Descriptor {
     fn serialize<W: io::Write>(&self, writer: &mut W) -> io::Result<()> {
@@ -22,7 +29,18 @@ impl BorshDeserialize for Descriptor {
     fn deserialize_reader<R: io::Read>(reader: &mut R) -> io::Result<Self> {
         // Read length
         let len = u32::deserialize_reader(reader)?;
-        // Read bytes
+        // Validate length before allocation to prevent DoS via unbounded memory allocation.
+        // A malicious input could specify a length up to u32::MAX (~4GB), causing OOM.
+        if len as usize > MAX_DESCRIPTOR_LEN {
+            return Err(io::Error::new(
+                io::ErrorKind::InvalidData,
+                format!(
+                    "descriptor length {} exceeds maximum allowed {}",
+                    len, MAX_DESCRIPTOR_LEN
+                ),
+            ));
+        }
+        // Read bytes (now safe to allocate after validation)
         let mut bytes = vec![0u8; len as usize];
         reader.read_exact(&mut bytes)?;
         // Convert to Descriptor
@@ -51,6 +69,41 @@ mod tests {
 
         let result = Descriptor::try_from_slice(&invalid_bytes);
         assert!(result.is_err());
+    }
+
+    #[test]
+    fn borsh_oversized_length_rejected() {
+        // Test that oversized length prefixes are rejected to prevent DoS.
+        // Craft a malicious payload with a length prefix larger than MAX_DESCRIPTOR_LEN.
+        // This should fail fast without allocating the requested memory.
+
+        // Create a payload with length prefix = MAX_DESCRIPTOR_LEN + 1
+        let oversized_len = (MAX_DESCRIPTOR_LEN + 1) as u32;
+        let mut malicious_data = Vec::with_capacity(8);
+        malicious_data.extend_from_slice(&oversized_len.to_le_bytes());
+        // Add some dummy bytes (we won't actually read them due to the length check)
+        malicious_data.extend_from_slice(&[0u8; 4]);
+
+        let result = Descriptor::try_from_slice(&malicious_data);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::InvalidData);
+        assert!(err.to_string().contains("exceeds maximum"));
+    }
+
+    #[test]
+    fn borsh_max_u32_length_rejected() {
+        // Test that u32::MAX length prefix is rejected.
+        // This would attempt to allocate ~4GB without the size check.
+        let max_len = u32::MAX;
+        let mut malicious_data = Vec::with_capacity(8);
+        malicious_data.extend_from_slice(&max_len.to_le_bytes());
+        malicious_data.extend_from_slice(&[0u8; 4]);
+
+        let result = Descriptor::try_from_slice(&malicious_data);
+        assert!(result.is_err());
+        let err = result.unwrap_err();
+        assert_eq!(err.kind(), std::io::ErrorKind::InvalidData);
     }
 
     #[test]
