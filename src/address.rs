@@ -15,7 +15,8 @@ use bitcoin::{
 
 use crate::{
     descriptor::{
-        P2PKH_LEN, P2SH_LEN, P2TR_LEN, P2TR_TYPE_TAG, P2WPKH_LEN, P2WPKH_P2WSH_TYPE_TAG, P2WSH_LEN,
+        P2A_PROGRAM_BYTES, P2PKH_LEN, P2SH_LEN, P2TR_LEN, P2TR_TYPE_TAG, P2WPKH_LEN,
+        P2WPKH_P2WSH_TYPE_TAG, P2WSH_LEN,
     },
     Descriptor, DescriptorError,
     DescriptorType::*,
@@ -203,8 +204,8 @@ impl TryFrom<Address> for Descriptor {
                     let payload = witness_program.program().as_bytes();
                     let payload_len = payload.len();
                     match payload_len {
-                        // P2A: 2 bytes ([0x4e, 0x73])
-                        2 => {
+                        // P2A: exactly 2 bytes [0x4e, 0x73] per BIP 433
+                        2 if payload == P2A_PROGRAM_BYTES => {
                             let mut bytes = [0u8; 1];
                             bytes[0] = P2TR_TYPE_TAG;
                             Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
@@ -288,8 +289,8 @@ impl TryFrom<WitnessProgram> for Descriptor {
             WitnessVersion::V1 => {
                 let payload_len = payload.len();
                 match payload_len {
-                    // P2A: 2 bytes ([0x4e, 0x73])
-                    2 => {
+                    // P2A: exactly 2 bytes [0x4e, 0x73] per BIP 433
+                    2 if payload == P2A_PROGRAM_BYTES => {
                         let mut bytes = [0u8; 1];
                         bytes[0] = P2TR_TYPE_TAG;
                         Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
@@ -601,11 +602,14 @@ mod tests {
         let s = "04";
         let desc = Descriptor::from_str(s).unwrap();
 
-        // NOTE: ScriptBuf::is_p2a is not implemented on rust-bitcoin
-        // TODO: update once `rust-bitcoin#5199` makes it into a release
         let script = desc.to_script();
         assert_eq!(script.len(), 4);
         assert_eq!(script.as_bytes(), &[0x51, 0x02, 0x4e, 0x73]);
+
+        // Validate against rust-bitcoin's WitnessProgram::is_p2a()
+        let witness_program = WitnessProgram::new(WitnessVersion::V1, &P2A_PROGRAM_BYTES).unwrap();
+        assert!(witness_program.is_p2a());
+        assert_eq!(witness_program.program().as_bytes(), P2A_PROGRAM_BYTES);
     }
 
     #[test]

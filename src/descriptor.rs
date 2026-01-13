@@ -64,6 +64,13 @@ pub(crate) const P2TR_TYPE_TAG: u8 = 4;
 /// Exact length of `P2A` payload.
 pub const P2A_LEN: usize = 0;
 
+/// The exact witness program data bytes for P2A (Pay-to-Anchor) per BIP 433.
+///
+/// P2A is defined as the scriptPubKey `OP_1 OP_PUSH2 <0x4e73>` (hex: `51 02 4e 73`).
+/// This constant contains just the 2-byte program data `[0x4e, 0x73]`, which is what
+/// `WitnessProgram::program().as_bytes()` returns for a P2A output.
+pub const P2A_PROGRAM_BYTES: [u8; 2] = [0x4e, 0x73];
+
 /// Exact length of P2TR payload.
 pub const P2TR_LEN: usize = 32;
 
