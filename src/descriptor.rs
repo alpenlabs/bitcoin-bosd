@@ -24,7 +24,18 @@ use crate::error::DescriptorError;
 pub(crate) const OP_RETURN_TYPE_TAG: u8 = 0;
 
 /// Maximum length of `OP_RETURN` payload.
-pub const MAX_OP_RETURN_LEN: usize = 100_000;
+///
+/// Bitcoin Core's `datacarriersize` default is 100,000 bytes for the entire script.
+/// See: <https://github.com/bitcoin/bitcoin/blob/v30.0/src/policy/policy.cpp#L146>
+///
+/// For large payloads (>65535 bytes), the script overhead is 6 bytes:
+///
+/// - OP_RETURN (1 byte)
+/// - OP_PUSHDATA4 (1 byte)
+/// - payload length (4 bytes)
+///
+/// Therefore: max payload = 100,000 - 6 = 99,994 bytes
+pub const MAX_OP_RETURN_LEN: usize = 99_994;
 
 /// `P2PKH` type tag.
 pub(crate) const P2PKH_TYPE_TAG: u8 = 1;
@@ -52,6 +63,13 @@ pub(crate) const P2TR_TYPE_TAG: u8 = 4;
 
 /// Exact length of `P2A` payload.
 pub const P2A_LEN: usize = 0;
+
+/// The exact witness program data bytes for P2A (Pay-to-Anchor) per BIP 433.
+///
+/// P2A is defined as the scriptPubKey `OP_1 OP_PUSH2 <0x4e73>` (hex: `51 02 4e 73`).
+/// This constant contains just the 2-byte program data `[0x4e, 0x73]`, which is what
+/// `WitnessProgram::program().as_bytes()` returns for a P2A output.
+pub const P2A_PROGRAM_BYTES: [u8; 2] = [0x4e, 0x73];
 
 /// Exact length of P2TR payload.
 pub const P2TR_LEN: usize = 32;
