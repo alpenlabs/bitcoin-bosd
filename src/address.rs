@@ -158,18 +158,20 @@ impl Descriptor {
     }
 }
 
-impl From<Address> for Descriptor {
-    fn from(value: Address) -> Self {
+impl TryFrom<Address> for Descriptor {
+    type Error = DescriptorError;
+
+    fn try_from(value: Address) -> Result<Self, Self::Error> {
         let address_data = value.to_address_data();
         match address_data {
             // P2PKH
-            AddressData::P2pkh { pubkey_hash } => {
-                Descriptor::new_p2pkh(&pubkey_hash.as_raw_hash().to_byte_array())
-            }
+            AddressData::P2pkh { pubkey_hash } => Ok(Descriptor::new_p2pkh(
+                &pubkey_hash.as_raw_hash().to_byte_array(),
+            )),
             // P2SH
-            AddressData::P2sh { script_hash } => {
-                Descriptor::new_p2sh(&script_hash.as_raw_hash().to_byte_array())
-            }
+            AddressData::P2sh { script_hash } => Ok(Descriptor::new_p2sh(
+                &script_hash.as_raw_hash().to_byte_array(),
+            )),
             // SegWit V0/V1
             AddressData::Segwit { witness_program } => match witness_program.version() {
                 WitnessVersion::V0 => {
@@ -181,17 +183,19 @@ impl From<Address> for Descriptor {
                             let mut bytes = [0u8; 21];
                             bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                             bytes[1..].copy_from_slice(payload);
-                            Descriptor::from_bytes(&bytes).expect("infallible")
+                            Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
                         }
                         // P2WSH: 32 bytes
                         32 => {
                             let mut bytes = [0u8; 33];
                             bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                             bytes[1..].copy_from_slice(payload);
-                            Descriptor::from_bytes(&bytes).expect("infallible")
+                            Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
                         }
-                        // NOTE: cannot be anything else.
-                        _ => unreachable!(),
+                        // Non-standard v0 witness program length (consensus-valid per BIP 141)
+                        _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
+                            "v0 witness program with non-standard length {payload_len} (expected 20 or 32)"
+                        ))),
                     }
                 }
                 // V1 is SegWit 2-byte P2A or 32-byte P2TR
@@ -203,25 +207,37 @@ impl From<Address> for Descriptor {
                         2 => {
                             let mut bytes = [0u8; 1];
                             bytes[0] = P2TR_TYPE_TAG;
-                            Descriptor::from_bytes(&bytes).expect("infallible")
+                            Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
                         }
+                        // Non-P2A 2-byte v1 program (consensus-valid but not P2A)
+                        2 => Err(DescriptorError::UnsupportedWitnessProgram(format!(
+                            "v1 witness program with 2 bytes but not P2A (expected [0x4e, 0x73], got [{:#04x}, {:#04x}])",
+                            payload[0], payload[1]
+                        ))),
                         // P2TR: 32 bytes
                         32 => {
                             let x_only_pk = witness_program.program().as_bytes();
                             let mut bytes = [0u8; 33];
                             bytes[0] = P2TR_TYPE_TAG;
                             bytes[1..].copy_from_slice(x_only_pk);
-                            Descriptor::from_bytes(&bytes).expect("infallible")
+                            Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
                         }
-                        // NOTE: cannot be anything else.
-                        _ => unreachable!(),
+                        // Non-standard v1 witness program length (consensus-valid per BIP 341)
+                        _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
+                            "v1 witness program with non-standard length {payload_len} (expected 2 or 32)"
+                        ))),
                     }
                 }
-                // NOTE: We don't have versions higher than V2 yet.
-                _ => unreachable!(),
+                // Future witness versions (v2+) are consensus-valid per BIP 141
+                _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
+                    "witness version {} is not yet supported",
+                    witness_program.version().to_num()
+                ))),
             },
-            // NOTE: `AddressData` is a `#[non_exhaustive]` enum.
-            _ => unreachable!(),
+            // Future AddressData variants
+            _ => Err(DescriptorError::UnsupportedWitnessProgram(
+                "unknown address type".to_string(),
+            )),
         }
     }
 }
@@ -238,8 +254,10 @@ impl From<ScriptHash> for Descriptor {
     }
 }
 
-impl From<WitnessProgram> for Descriptor {
-    fn from(witness_program: WitnessProgram) -> Self {
+impl TryFrom<WitnessProgram> for Descriptor {
+    type Error = DescriptorError;
+
+    fn try_from(witness_program: WitnessProgram) -> Result<Self, Self::Error> {
         let payload: &[u8] = witness_program.program().as_bytes();
         match witness_program.version() {
             // V0 is SegWit 20-bytes P2WPKH or 32-bytes P2WSH
@@ -251,17 +269,19 @@ impl From<WitnessProgram> for Descriptor {
                         let mut bytes = [0u8; 21];
                         bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
-                        Descriptor::from_bytes(&bytes).expect("infallible")
+                        Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
                     }
                     // P2WSH: 32 bytes
                     P2WSH_LEN => {
                         let mut bytes = [0u8; 33];
                         bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
-                        Descriptor::from_bytes(&bytes).expect("infallible")
+                        Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
                     }
-                    // NOTE: cannot be anything else.
-                    _ => unreachable!(),
+                    // Non-standard v0 witness program length (consensus-valid per BIP 141)
+                    _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
+                        "v0 witness program with non-standard length {payload_len} (expected 20 or 32)"
+                    ))),
                 }
             }
             // V1 is SegWit 2-byte P2A or 32-byte P2TR
@@ -272,21 +292,31 @@ impl From<WitnessProgram> for Descriptor {
                     2 => {
                         let mut bytes = [0u8; 1];
                         bytes[0] = P2TR_TYPE_TAG;
-                        Descriptor::from_bytes(&bytes).expect("infallible")
+                        Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
                     }
+                    // Non-P2A 2-byte v1 program (consensus-valid but not P2A)
+                    2 => Err(DescriptorError::UnsupportedWitnessProgram(format!(
+                        "v1 witness program with 2 bytes but not P2A (expected [0x4e, 0x73], got [{:#04x}, {:#04x}])",
+                        payload[0], payload[1]
+                    ))),
                     // P2TR: 32 bytes
                     P2TR_LEN => {
                         let mut bytes = [0u8; 33];
                         bytes[0] = P2TR_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
-                        Descriptor::from_bytes(&bytes).expect("infallible")
+                        Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
                     }
-                    // NOTE: cannot be anything else.
-                    _ => unreachable!(),
+                    // Non-standard v1 witness program length (consensus-valid per BIP 341)
+                    _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
+                        "v1 witness program with non-standard length {payload_len} (expected 2 or 32)"
+                    ))),
                 }
             }
-            // NOTE: We don't have versions higher than V2 yet.
-            _ => unreachable!(),
+            // Future witness versions (v2+) are consensus-valid per BIP 141
+            _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
+                "witness version {} is not yet supported",
+                witness_program.version().to_num()
+            ))),
         }
     }
 }
@@ -373,7 +403,7 @@ mod tests {
             .parse::<Address<NetworkUnchecked>>()
             .unwrap()
             .assume_checked();
-        let desc = Descriptor::from(address.clone());
+        let desc = Descriptor::try_from(address.clone()).unwrap();
         assert_eq!(desc.type_tag(), P2pkh);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -391,7 +421,7 @@ mod tests {
             .parse::<Address<NetworkUnchecked>>()
             .unwrap()
             .assume_checked();
-        let desc = Descriptor::from(address.clone());
+        let desc = Descriptor::try_from(address.clone()).unwrap();
         assert_eq!(desc.type_tag(), P2sh);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -409,7 +439,7 @@ mod tests {
             .parse::<Address<NetworkUnchecked>>()
             .unwrap()
             .assume_checked();
-        let desc = Descriptor::from(address.clone());
+        let desc = Descriptor::try_from(address.clone()).unwrap();
         assert_eq!(desc.type_tag(), P2wpkh);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -427,7 +457,7 @@ mod tests {
             .parse::<Address<NetworkUnchecked>>()
             .unwrap()
             .assume_checked();
-        let desc = Descriptor::from(address.clone());
+        let desc = Descriptor::try_from(address.clone()).unwrap();
         assert_eq!(desc.type_tag(), P2wsh);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -445,7 +475,7 @@ mod tests {
             .parse::<Address<NetworkUnchecked>>()
             .unwrap()
             .assume_checked();
-        let desc = Descriptor::from(address.clone());
+        let desc = Descriptor::try_from(address.clone()).unwrap();
         assert_eq!(desc.type_tag(), P2a);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -463,7 +493,7 @@ mod tests {
             .parse::<Address<NetworkUnchecked>>()
             .unwrap()
             .assume_checked();
-        let desc = Descriptor::from(address.clone());
+        let desc = Descriptor::try_from(address.clone()).unwrap();
         assert_eq!(desc.type_tag(), P2tr);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -635,7 +665,7 @@ mod tests {
             .unwrap()
             .assume_checked();
         let witness_program = address.witness_program().unwrap();
-        let desc = Descriptor::from(witness_program);
+        let desc = Descriptor::try_from(witness_program).unwrap();
         assert_eq!(desc.type_tag(), P2wpkh);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -651,7 +681,7 @@ mod tests {
             .unwrap()
             .assume_checked();
         let witness_program = address.witness_program().unwrap();
-        let desc = Descriptor::from(witness_program);
+        let desc = Descriptor::try_from(witness_program).unwrap();
         assert_eq!(desc.type_tag(), P2wsh);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -667,7 +697,7 @@ mod tests {
             .unwrap()
             .assume_checked();
         let witness_program = address.witness_program().unwrap();
-        let desc = Descriptor::from(witness_program);
+        let desc = Descriptor::try_from(witness_program).unwrap();
         assert_eq!(desc.type_tag(), P2a);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();
@@ -683,7 +713,7 @@ mod tests {
             .unwrap()
             .assume_checked();
         let witness_program = address.witness_program().unwrap();
-        let desc = Descriptor::from(witness_program);
+        let desc = Descriptor::try_from(witness_program).unwrap();
         assert_eq!(desc.type_tag(), P2tr);
 
         let address_translated = desc.to_address(Network::Bitcoin).unwrap();

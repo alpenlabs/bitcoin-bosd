@@ -44,6 +44,14 @@ pub enum DescriptorError {
     /// [`WitnessProgram`](bitcoin::WitnessProgram) errors.
     #[cfg(feature = "address")]
     WitnessProgramError(WitnessProgramError),
+
+    /// Unsupported witness program.
+    ///
+    /// The witness program is consensus-valid but not representable
+    /// as a standard descriptor (e.g., non-standard v0/v1 lengths,
+    /// future witness versions v2+, or non-P2A 2-byte v1 programs).
+    #[cfg(feature = "address")]
+    UnsupportedWitnessProgram(String),
 }
 
 impl core::fmt::Display for DescriptorError {
@@ -64,6 +72,8 @@ impl core::fmt::Display for DescriptorError {
             Self::Secp256k1Error(err) => write!(f, "secp256k1 error: {err}"),
             #[cfg(feature = "address")]
             Self::WitnessProgramError(err) => write!(f, "witness program error: {err}"),
+            #[cfg(feature = "address")]
+            Self::UnsupportedWitnessProgram(msg) => write!(f, "unsupported witness program: {msg}"),
         }
     }
 }
@@ -78,6 +88,8 @@ impl std::error::Error for DescriptorError {
             Self::Secp256k1Error(err) => Some(err),
             #[cfg(feature = "address")]
             Self::WitnessProgramError(err) => Some(err),
+            #[cfg(feature = "address")]
+            Self::UnsupportedWitnessProgram(_) => None,
             _ => None,
         }
     }
