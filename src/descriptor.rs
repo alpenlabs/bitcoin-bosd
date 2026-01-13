@@ -24,7 +24,18 @@ use crate::error::DescriptorError;
 pub(crate) const OP_RETURN_TYPE_TAG: u8 = 0;
 
 /// Maximum length of `OP_RETURN` payload.
-pub const MAX_OP_RETURN_LEN: usize = 100_000;
+///
+/// Bitcoin Core's `datacarriersize` default is 100,000 bytes for the entire script.
+/// See: <https://github.com/bitcoin/bitcoin/blob/v30.0/src/policy/policy.cpp#L146>
+///
+/// For large payloads (>65535 bytes), the script overhead is 6 bytes:
+///
+/// - OP_RETURN (1 byte)
+/// - OP_PUSHDATA4 (1 byte)
+/// - payload length (4 bytes)
+///
+/// Therefore: max payload = 100,000 - 6 = 99,994 bytes
+pub const MAX_OP_RETURN_LEN: usize = 99_994;
 
 /// `P2PKH` type tag.
 pub(crate) const P2PKH_TYPE_TAG: u8 = 1;

@@ -88,7 +88,7 @@ impl Descriptor {
                 //       safe or unsafe from an runtime-only known payload.
                 //
                 //       This is safe because we can only construct an `OP_RETURN`
-                //       `Descriptor` that has a length of maximum 100KB.
+                //       `Descriptor` that has a length of maximum ~100KB.
                 //
                 //       The construction is:
                 //       - OP_RETURN
