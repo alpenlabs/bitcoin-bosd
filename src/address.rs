@@ -8,7 +8,7 @@ use bitcoin::{
     address::AddressData,
     hashes::{hash160::Hash as Hash160, sha256::Hash as Hash256, Hash as _},
     key::{TapTweak, TweakedPublicKey},
-    opcodes::all::OP_RETURN,
+    opcodes::all::{OP_PUSHDATA1, OP_PUSHDATA2, OP_PUSHDATA4, OP_RETURN},
     Address, Network, PubkeyHash, ScriptBuf, ScriptHash, WPubkeyHash, WScriptHash, WitnessProgram,
     WitnessVersion, XOnlyPublicKey,
 };
@@ -90,14 +90,32 @@ impl Descriptor {
                 //       This is safe because we can only construct an `OP_RETURN`
                 //       `Descriptor` that has a length of maximum ~100KB.
                 //
-                //       The construction is:
-                //       - OP_RETURN
-                //       - payload length
-                //       - payload
+                //       The construction follows Bitcoin Script push data encoding:
+                //
+                //       - 0-75 bytes: `OP_RETURN` + length (1 byte) + payload
+                //       - 76-255 bytes: `OP_RETURN` + `OP_PUSHDATA1` + length (1 byte) + payload
+                //       - 256-65535 bytes: `OP_RETURN` + `OP_PUSHDATA2` + length (2 bytes LE) + payload
+                //       - 65536+ bytes: `OP_RETURN` + `OP_PUSHDATA4` + length (4 bytes LE) + payload
                 let payload = self.payload();
-                let payload_len = payload.len() as u8;
                 let op_return = OP_RETURN.to_u8();
-                let bytes = [&[op_return], &[payload_len], payload].concat();
+                let bytes = match payload.len() {
+                    len @ 0..=75 => [&[op_return, len as u8], payload].concat(),
+                    len @ 76..=255 => {
+                        [&[op_return, OP_PUSHDATA1.to_u8(), len as u8], payload].concat()
+                    }
+                    len @ 256..=65535 => [
+                        &[op_return, OP_PUSHDATA2.to_u8()][..],
+                        &(len as u16).to_le_bytes(),
+                        payload,
+                    ]
+                    .concat(),
+                    len => [
+                        &[op_return, OP_PUSHDATA4.to_u8()][..],
+                        &(len as u32).to_le_bytes(),
+                        payload,
+                    ]
+                    .concat(),
+                };
                 let script = ScriptBuf::from_bytes(bytes);
                 assert!(script.is_op_return());
                 script
@@ -466,6 +484,30 @@ mod tests {
         // Maximum size is 83 bytes.
         // See: https://github.com/bitcoin/bitcoin/blob/master/doc/release-notes/release-notes-0.12.0.md#relay-any-sequence-of-pushdatas-in-op_return-outputs-now-allowed
         assert!(script.len() < 83);
+    }
+
+    #[test]
+    fn op_return_script_large() {
+        // Test OP_RETURN script generation for payloads requiring OP_PUSHDATA1/2/4.
+        // Bitcoin Script push data encoding boundaries:
+        // - 0-75 bytes: direct push (length byte is opcode)
+        // - 76-255 bytes: OP_PUSHDATA1 + 1-byte length
+        // - 256-65535 bytes: OP_PUSHDATA2 + 2-byte length (LE)
+        // - 65536+ bytes: OP_PUSHDATA4 + 4-byte length (LE)
+        use bitcoin::script::Instruction;
+        for len in [75, 76, 255, 256, 65535, 65536] {
+            let data = vec![0xff; len];
+            let desc = Descriptor::new_op_return(&data).unwrap();
+
+            let script = desc.to_script();
+            assert!(script.is_op_return());
+            let mut iter = script.instructions();
+            assert_eq!(iter.next(), Some(Ok(Instruction::Op(OP_RETURN))));
+            assert!(
+                matches!(iter.next(), Some(Ok(Instruction::PushBytes(x))) if x.as_bytes() == data)
+            );
+            assert_eq!(iter.next(), None);
+        }
     }
 
     #[test]
