@@ -184,14 +184,14 @@ impl TryFrom<Address> for Descriptor {
                             let mut bytes = [0u8; 21];
                             bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                             bytes[1..].copy_from_slice(payload);
-                            Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
+                            Descriptor::from_bytes(&bytes)
                         }
                         // P2WSH: 32 bytes
                         32 => {
                             let mut bytes = [0u8; 33];
                             bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                             bytes[1..].copy_from_slice(payload);
-                            Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
+                            Descriptor::from_bytes(&bytes)
                         }
                         // Non-standard v0 witness program length (consensus-valid per BIP 141)
                         _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
@@ -206,9 +206,8 @@ impl TryFrom<Address> for Descriptor {
                     match payload_len {
                         // P2A: exactly 2 bytes [0x4e, 0x73] per BIP 433
                         2 if payload == P2A_PROGRAM_BYTES => {
-                            let mut bytes = [0u8; 1];
-                            bytes[0] = P2TR_TYPE_TAG;
-                            Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
+                            let bytes = [P2TR_TYPE_TAG];
+                            Descriptor::from_bytes(&bytes)
                         }
                         // Non-P2A 2-byte v1 program (consensus-valid but not P2A)
                         2 => Err(DescriptorError::UnsupportedWitnessProgram(format!(
@@ -221,7 +220,7 @@ impl TryFrom<Address> for Descriptor {
                             let mut bytes = [0u8; 33];
                             bytes[0] = P2TR_TYPE_TAG;
                             bytes[1..].copy_from_slice(x_only_pk);
-                            Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
+                            Descriptor::from_bytes(&bytes)
                         }
                         // Non-standard v1 witness program length (consensus-valid per BIP 341)
                         _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
@@ -270,14 +269,14 @@ impl TryFrom<WitnessProgram> for Descriptor {
                         let mut bytes = [0u8; 21];
                         bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
-                        Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
+                        Descriptor::from_bytes(&bytes)
                     }
                     // P2WSH: 32 bytes
                     P2WSH_LEN => {
                         let mut bytes = [0u8; 33];
                         bytes[0] = P2WPKH_P2WSH_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
-                        Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
+                        Descriptor::from_bytes(&bytes)
                     }
                     // Non-standard v0 witness program length (consensus-valid per BIP 141)
                     _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
@@ -291,9 +290,8 @@ impl TryFrom<WitnessProgram> for Descriptor {
                 match payload_len {
                     // P2A: exactly 2 bytes [0x4e, 0x73] per BIP 433
                     2 if payload == P2A_PROGRAM_BYTES => {
-                        let mut bytes = [0u8; 1];
-                        bytes[0] = P2TR_TYPE_TAG;
-                        Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
+                        let bytes = [P2TR_TYPE_TAG];
+                        Descriptor::from_bytes(&bytes)
                     }
                     // Non-P2A 2-byte v1 program (consensus-valid but not P2A)
                     2 => Err(DescriptorError::UnsupportedWitnessProgram(format!(
@@ -305,7 +303,7 @@ impl TryFrom<WitnessProgram> for Descriptor {
                         let mut bytes = [0u8; 33];
                         bytes[0] = P2TR_TYPE_TAG;
                         bytes[1..].copy_from_slice(payload);
-                        Ok(Descriptor::from_bytes(&bytes).expect("infallible"))
+                        Descriptor::from_bytes(&bytes)
                     }
                     // Non-standard v1 witness program length (consensus-valid per BIP 341)
                     _ => Err(DescriptorError::UnsupportedWitnessProgram(format!(
