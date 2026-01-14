@@ -24,7 +24,6 @@ pub enum DescriptorError {
     InvalidPayloadLength(usize),
 
     /// Invalid X-only public key.
-    #[cfg(feature = "address")]
     InvalidXOnlyPublicKey,
 
     /// Hex decoding error.
@@ -37,7 +36,7 @@ pub enum DescriptorError {
     #[cfg(feature = "address")]
     InvalidAddressConversion(DescriptorType),
 
-    /// [`secp256k1`](bitcoin::secp256k1) errors.
+    /// [`secp256k1`] errors.
     #[cfg(feature = "address")]
     Secp256k1Error(Secp256k1Error),
 
@@ -60,7 +59,6 @@ impl core::fmt::Display for DescriptorError {
             Self::MissingTypeTag => write!(f, "missing type tag"),
             Self::InvalidDescriptorType(tag) => write!(f, "invalid descriptor type tag: {tag}"),
             Self::InvalidPayloadLength(len) => write!(f, "invalid payload length: {len}"),
-            #[cfg(feature = "address")]
             Self::InvalidXOnlyPublicKey => write!(f, "invalid X-only public key"),
             Self::HexDecodingError(err) => write!(f, "hex decoding error: {err}"),
             #[cfg(feature = "address")]
