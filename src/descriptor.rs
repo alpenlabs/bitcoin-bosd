@@ -771,6 +771,20 @@ mod tests {
         );
     }
 
+    #[test]
+    fn invalid_p2tr_from_bytes() {
+        // P2TR with invalid X-only public key (all zeros is not a valid point on secp256k1)
+        let mut bytes = [0u8; 33];
+        bytes[0] = P2TR_TYPE_TAG;
+        // payload is all zeros, which is invalid
+        let result = Descriptor::from_bytes(&bytes);
+        assert!(result.is_err());
+        assert_eq!(
+            result.err().unwrap(),
+            DescriptorError::InvalidXOnlyPublicKey
+        );
+    }
+
     /// Verify that MAX_OP_RETURN_LEN is correctly calculated to fit within
     /// Bitcoin Core's MAX_STANDARD_TX_WEIGHT for a minimal valid transaction.
     #[cfg(feature = "address")]
