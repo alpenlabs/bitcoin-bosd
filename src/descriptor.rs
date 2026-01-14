@@ -161,6 +161,18 @@ impl Descriptor {
                         type_tag: DescriptorType::P2a,
                         payload: payload.to_vec(),
                     }),
+                    #[cfg(feature = "address")]
+                    P2TR_LEN => {
+                        // Validate that the payload is a valid x-only public key
+                        if XOnlyPublicKey::from_slice(payload).is_err() {
+                            return Err(DescriptorError::InvalidXOnlyPublicKey);
+                        }
+                        Ok(Self {
+                            type_tag: DescriptorType::P2tr,
+                            payload: payload.to_vec(),
+                        })
+                    }
+                    #[cfg(not(feature = "address"))]
                     P2TR_LEN => Ok(Self {
                         type_tag: DescriptorType::P2tr,
                         payload: payload.to_vec(),
