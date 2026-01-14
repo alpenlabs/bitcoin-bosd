@@ -28,14 +28,25 @@ pub(crate) const OP_RETURN_TYPE_TAG: u8 = 0;
 /// Bitcoin Core's `datacarriersize` default is 100,000 bytes for the entire script.
 /// See: <https://github.com/bitcoin/bitcoin/blob/v30.0/src/policy/policy.cpp#L146>
 ///
-/// For large payloads (>65535 bytes), the script overhead is 6 bytes:
+/// Bitcoin Core's `MAX_STANDARD_TX_WEIGHT` is 400,000 weight units.
+/// For non-segwit transactions: max size = 400,000 / 4 = 100,000 bytes.
+/// See: <https://github.com/bitcoin/bitcoin/blob/v28.0/src/policy/policy.h#L27>
 ///
-/// - OP_RETURN (1 byte)
-/// - OP_PUSHDATA4 (1 byte)
-/// - payload length (4 bytes)
+/// A valid transaction requires at least one input. The minimum overhead for a
+/// transaction with a single OP_RETURN output spending a bare `OP_TRUE` output is:
 ///
-/// Therefore: max payload = 100,000 - 6 = 99,994 bytes
-pub const MAX_OP_RETURN_LEN: usize = 99_994;
+/// - Version: 4 bytes
+/// - Input count (`varint=1`): 1 byte
+/// - Input (prevout + empty scriptSig + sequence): 41 bytes
+/// - Output count (`varint=1`): 1 byte
+/// - Output value: 8 bytes
+/// - ScriptPubKey length (varint, for scripts `> 65_535`): 5 bytes
+/// - `OP_RETURN` + `OP_PUSHDATA4` + 4-byte length: 6 bytes
+/// - Locktime: 4 bytes
+/// - Total overhead: 70 bytes
+///
+/// Therefore: max payload = 100,000 - 70 = 99,930 bytes
+pub const MAX_OP_RETURN_LEN: usize = 99_930;
 
 /// `P2PKH` type tag.
 pub(crate) const P2PKH_TYPE_TAG: u8 = 1;
@@ -161,6 +172,18 @@ impl Descriptor {
                         type_tag: DescriptorType::P2a,
                         payload: payload.to_vec(),
                     }),
+                    #[cfg(feature = "address")]
+                    P2TR_LEN => {
+                        // Validate that the payload is a valid x-only public key
+                        if XOnlyPublicKey::from_slice(payload).is_err() {
+                            return Err(DescriptorError::InvalidXOnlyPublicKey);
+                        }
+                        Ok(Self {
+                            type_tag: DescriptorType::P2tr,
+                            payload: payload.to_vec(),
+                        })
+                    }
+                    #[cfg(not(feature = "address"))]
                     P2TR_LEN => Ok(Self {
                         type_tag: DescriptorType::P2tr,
                         payload: payload.to_vec(),
@@ -778,6 +801,77 @@ mod tests {
         assert_eq!(
             result.err().unwrap(),
             DescriptorError::InvalidXOnlyPublicKey
+        );
+    }
+
+    /// Verify that MAX_OP_RETURN_LEN is correctly calculated to fit within
+    /// Bitcoin Core's MAX_STANDARD_TX_WEIGHT for a minimal valid transaction.
+    #[cfg(feature = "address")]
+    #[test]
+    fn max_op_return_fits_in_standard_tx() {
+        use bitcoin::{
+            absolute::LockTime, blockdata::script::PushBytesBuf, hashes::Hash,
+            transaction::Version, Amount, OutPoint, ScriptBuf, Sequence, Transaction, TxIn, TxOut,
+            Txid, Witness,
+        };
+
+        // Create a minimal valid transaction:
+        // - One input spending a bare OP_TRUE output (empty scriptSig)
+        // - One OP_RETURN output with MAX_OP_RETURN_LEN bytes
+        let tx = Transaction {
+            version: Version::ONE,
+            lock_time: LockTime::ZERO,
+            input: vec![TxIn {
+                previous_output: OutPoint {
+                    txid: Txid::all_zeros(),
+                    vout: 0,
+                },
+                script_sig: ScriptBuf::new(), // Empty scriptSig (spending bare OP_TRUE)
+                sequence: Sequence::MAX,
+                witness: Witness::new(),
+            }],
+            output: vec![TxOut {
+                value: Amount::ZERO,
+                script_pubkey: ScriptBuf::new_op_return(
+                    PushBytesBuf::try_from(vec![0u8; MAX_OP_RETURN_LEN]).unwrap(),
+                ),
+            }],
+        };
+
+        // Verify the transaction weight is within the standard limit
+        assert!(
+            tx.weight() <= Transaction::MAX_STANDARD_WEIGHT,
+            "Transaction with MAX_OP_RETURN_LEN ({}) bytes has weight {} which exceeds MAX_STANDARD_WEIGHT ({})",
+            MAX_OP_RETURN_LEN,
+            tx.weight(),
+            Transaction::MAX_STANDARD_WEIGHT
+        );
+
+        // Verify that one more byte would exceed the limit
+        let tx_exceeded = Transaction {
+            version: Version::ONE,
+            lock_time: LockTime::ZERO,
+            input: vec![TxIn {
+                previous_output: OutPoint {
+                    txid: Txid::all_zeros(),
+                    vout: 0,
+                },
+                script_sig: ScriptBuf::new(),
+                sequence: Sequence::MAX,
+                witness: Witness::new(),
+            }],
+            output: vec![TxOut {
+                value: Amount::ZERO,
+                script_pubkey: ScriptBuf::new_op_return(
+                    PushBytesBuf::try_from(vec![0u8; MAX_OP_RETURN_LEN + 1]).unwrap(),
+                ),
+            }],
+        };
+
+        assert!(
+            tx_exceeded.weight() > Transaction::MAX_STANDARD_WEIGHT,
+            "Transaction with MAX_OP_RETURN_LEN + 1 ({}) bytes should exceed MAX_STANDARD_WEIGHT",
+            MAX_OP_RETURN_LEN + 1
         );
     }
 }
