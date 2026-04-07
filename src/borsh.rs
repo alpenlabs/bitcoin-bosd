@@ -57,10 +57,10 @@ impl BorshDeserialize for Descriptor {
 mod tests {
     use std::str::FromStr;
 
-    use crate::DescriptorType;
+    use borsh::{to_vec, BorshDeserialize};
 
     use super::*;
-    use borsh::{to_vec, BorshDeserialize};
+    use crate::DescriptorType;
 
     #[test]
     fn invalid_borsh_deserialization() {

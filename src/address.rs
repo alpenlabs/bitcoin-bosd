@@ -320,9 +320,10 @@ mod tests {
 
     #[cfg(test)]
     mod proptest_tests {
+        use proptest::prelude::*;
+
         use super::*;
         use crate::descriptor::{DescriptorType, MAX_OP_RETURN_LEN};
-        use proptest::prelude::*;
 
         proptest! {
             /// Test that `OP_RETURN` descriptors convert to valid scripts.

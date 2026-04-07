@@ -7,14 +7,12 @@
 //! specification and rationale.
 
 use core::fmt;
-
 use std::{
     fmt::{Display, Formatter},
     str::FromStr,
 };
 
 use hex::{DisplayHex, FromHex};
-
 use secp256k1::XOnlyPublicKey;
 
 use crate::error::DescriptorError;
@@ -361,8 +359,8 @@ impl Descriptor {
     ///
     /// # Notes
     ///
-    /// - This method is intended for internal use and relies on the caller
-    ///   ensuring that the payload's length matches the size `B`.
+    /// - This method is intended for internal use and relies on the caller ensuring that the
+    ///   payload's length matches the size `B`.
     pub(crate) fn to_fixed_payload_bytes<const B: usize>(&self) -> [u8; B] {
         debug_assert_eq!(self.payload().len(), B);
         let mut bytes = [0u8; B];
@@ -497,8 +495,9 @@ mod tests {
 
     #[cfg(test)]
     mod proptest_tests {
-        use super::*;
         use proptest::prelude::*;
+
+        use super::*;
 
         proptest! {
             /// Test that any valid `OP_RETURN` payload (0-100KB) roundtrips correctly.
@@ -568,7 +567,8 @@ mod tests {
         for type_tag in 0..=u8::MAX {
             let bytes = [type_tag];
 
-            // An empty payload is currently invalid for all types except `OP_RETURN` and `P2TR` with an empty payload.
+            // An empty payload is currently invalid for all types except `OP_RETURN` and `P2TR`
+            // with an empty payload.
             match type_tag {
                 OP_RETURN_TYPE_TAG => assert!(Descriptor::from_bytes(&bytes).is_ok()),
                 P2TR_TYPE_TAG => assert!(Descriptor::from_bytes(&bytes).is_ok()),
@@ -719,7 +719,8 @@ mod tests {
         assert!(Descriptor::from_str(s).is_err());
 
         // Invalid payload length
-        // OP_RETURN with 100001 bytes (create a hex string with (MAX_OP_RETURN_LEN + 1)*2 hex chars)
+        // OP_RETURN with 100001 bytes (create a hex string with (MAX_OP_RETURN_LEN + 1)*2 hex
+        // chars)
         let s = "00".to_string() + &"00".repeat(MAX_OP_RETURN_LEN + 1);
         assert!(Descriptor::from_str(&s).is_err());
 
