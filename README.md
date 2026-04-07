@@ -10,7 +10,10 @@
 - Compact binary representation of standard Bitcoin output types.
 - Zero-copy parsing and validation.
 - Support for P2PKH, P2SH, P2WPKH, P2WSH, P2TR, and `OP_RETURN` outputs.
-- Implements [`serde`](https://serde.rs) and [`borsh`](https://borsh.io) serialization.
+- Implements [`serde`](https://serde.rs),
+  [`borsh`](https://borsh.io),
+  and SSZ (using [`alpenlabs/ssz-gen`](https://github.com/alpenlabs/ssz-gen))
+  serialization.
 - Strict validation of Bitcoin addresses and output formats.
 - Direct conversion to `bitcoin::ScriptBuf`.
 
@@ -72,6 +75,7 @@ let borsh_bytes = borsh::to_vec(&desc)?;
 | `arbitrary` |          | needs `address` | Adds [`Arbitrary`](https://docs.rs/arbitrary/) to generate random descriptors for fuzzing and property testing                                                                     |
 | `borsh`     |          |        ✓        | Adds descriptor serialization and deserialization via [`borsh`](https://borsh.io)                                                                                                  |
 | `serde`     |    ✓     |        ✓        | Adds descriptor serialization and deserialization via [`serde`](https://serde.rs)                                                                                                  |
+| `ssz`       |          |        ✓        | Adds descriptor serialization and deserialization via `alpenlabs/ssz-gen; SSZ bytes are identical to the BOSD byte representation                                    |
 
 ## Contributing
 
