@@ -20,10 +20,14 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
         with:
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@22a6a5b0f9f487c5f5587025ae9d4a1caf2a8a78 # clippy
+
+      - name: Setup Rust
+        run: rustup show
+
       - uses: Swatinem/rust-cache@c19371144df3bb44fab255c43d04cbc2ab54d1c4 # v2
         with:
           cache-on-failure: true
+
       - run: cargo clippy --examples --tests --benches --all-features --all-targets --locked
         env:
           RUSTFLAGS: -D warnings
@@ -36,9 +40,10 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
         with:
           persist-credentials: false
-      - uses: dtolnay/rust-toolchain@fcf085fcb4b4b8f63f96906cd713eb52181b5ea4 # stable
-        with:
-          components: rustfmt
+
+      - name: Setup Rust
+        run: rustup show
+
       - run: cargo fmt --all --check
 
   taplo:
@@ -49,13 +54,16 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v4
         with:
           persist-credentials: false
+
       - name: Install taplo
         run: |
           curl -fsSL https://github.com/tamasfe/taplo/releases/latest/download/taplo-full-linux-x86_64.gz \
             | gzip -d - | install -m 755 /dev/stdin /usr/local/bin/taplo
+
       - name: Run taplo lint
         run: |
           taplo lint
+
       - name: Run taplo format check
         run: |
           taplo fmt --check
