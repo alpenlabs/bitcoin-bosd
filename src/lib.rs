@@ -23,6 +23,8 @@ pub mod descriptor;
 pub mod error;
 #[cfg(feature = "serde")]
 pub mod serde;
+#[cfg(feature = "ssz")]
+pub mod ssz;
 
 pub use descriptor::{Descriptor, DescriptorType};
 pub use error::DescriptorError;
