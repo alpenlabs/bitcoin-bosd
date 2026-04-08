@@ -1,43 +1,62 @@
 //! Custom serialization and deserialization for [`Descriptor`] using
 //! Alpen Labs' SimpleSerialize (SSZ) flavour.
 
-use crate::Descriptor;
+use ssz_types::VariableList;
+
+use crate::{descriptor::MAX_OP_RETURN_LEN, Descriptor};
 
 /// Maximum allowed descriptor length for SSZ decoding.
 ///
-/// This models BOSD as an opaque `List[uint8, 1 << 18]`.
-pub const MAX_DESCRIPTOR_SSZ_LEN: usize = 1 << 18;
+/// This is the maximum valid BOSD byte length: one type tag byte plus the largest permitted
+/// `OP_RETURN` payload.
+pub const MAX_DESCRIPTOR_SSZ_LEN: usize = MAX_OP_RETURN_LEN + 1;
+
+/// The SSZ representation used for BOSD descriptors.
+///
+/// BOSD is encoded as an opaque `VariableList<u8, MAX_DESCRIPTOR_SSZ_LEN>` rather than as a
+/// structured SSZ container.
+type DescriptorByteList = VariableList<u8, MAX_DESCRIPTOR_SSZ_LEN>;
+
+/// Converts a descriptor into the SSZ list type used by this module.
+///
+/// This keeps the SSZ implementation delegated to `VariableList` instead of hand-rolling
+/// BOSD-specific SSZ pointer handling.
+fn descriptor_to_ssz_bytes(descriptor: &Descriptor) -> DescriptorByteList {
+    DescriptorByteList::try_from(descriptor.to_bytes())
+        .expect("descriptor bytes are always within the SSZ maximum bound")
+}
 
 impl ::ssz::Encode for Descriptor {
     fn is_ssz_fixed_len() -> bool {
-        false
+        <DescriptorByteList as ::ssz::Encode>::is_ssz_fixed_len()
+    }
+
+    fn ssz_fixed_len() -> usize {
+        <DescriptorByteList as ::ssz::Encode>::ssz_fixed_len()
     }
 
     fn ssz_bytes_len(&self) -> usize {
-        1 + self.payload().len()
+        descriptor_to_ssz_bytes(self).ssz_bytes_len()
     }
 
     fn ssz_append(&self, buf: &mut Vec<u8>) {
-        buf.push(self.type_tag().to_u8());
-        buf.extend_from_slice(self.payload());
+        descriptor_to_ssz_bytes(self).ssz_append(buf);
     }
 }
 
 impl ::ssz::Decode for Descriptor {
     fn is_ssz_fixed_len() -> bool {
-        false
+        <DescriptorByteList as ::ssz::Decode>::is_ssz_fixed_len()
+    }
+
+    fn ssz_fixed_len() -> usize {
+        <DescriptorByteList as ::ssz::Decode>::ssz_fixed_len()
     }
 
     fn from_ssz_bytes(bytes: &[u8]) -> Result<Self, ::ssz::DecodeError> {
-        if bytes.len() > MAX_DESCRIPTOR_SSZ_LEN {
-            return Err(::ssz::DecodeError::BytesInvalid(format!(
-                "descriptor length {} exceeds maximum {}",
-                bytes.len(),
-                MAX_DESCRIPTOR_SSZ_LEN
-            )));
-        }
+        let descriptor_bytes = <DescriptorByteList as ::ssz::Decode>::from_ssz_bytes(bytes)?;
 
-        Descriptor::from_vec(bytes.to_vec()).map_err(|err| {
+        Descriptor::from_vec(descriptor_bytes.into()).map_err(|err| {
             ::ssz::DecodeError::BytesInvalid(format!("invalid BOSD descriptor: {err}"))
         })
     }
