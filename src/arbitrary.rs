@@ -80,11 +80,11 @@ impl<'a> Arbitrary<'a> for Descriptor {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use arbitrary::Arbitrary;
     use bitcoin::Network;
     use rand_core::{OsRng, RngCore};
 
+    use super::*;
     use crate::DescriptorType;
 
     #[test]

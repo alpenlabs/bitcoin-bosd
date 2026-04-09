@@ -49,15 +49,17 @@ impl<'de> Deserialize<'de> for Descriptor {
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
     use super::*;
     use crate::DescriptorType;
-    use std::str::FromStr;
 
     #[cfg(test)]
     mod proptest_tests {
+        use proptest::prelude::*;
+
         use super::*;
         use crate::descriptor::MAX_OP_RETURN_LEN;
-        use proptest::prelude::*;
 
         proptest! {
             /// Test that `OP_RETURN` descriptors serialize/deserialize correctly.

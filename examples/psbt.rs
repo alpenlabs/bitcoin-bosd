@@ -1,12 +1,14 @@
 //! Implements an example PSBT workflow.
 //!
-//! The workflow we simulate is that of a setup using BOSDs to create a PSBT with a P2WPKH and a OP_return outputs.
+//! The workflow we simulate is that of a setup using BOSDs to create a PSBT with a P2WPKH and a
+//! OP_return outputs.
 //!
 //! ## How to check:
 //!
 //! 1. Start Bitcoin Core in Regtest mode, for example:
 //!
-//!    `bitcoind -regtest -server -daemon -fallbackfee=0.0002 -rpcuser=admin -rpcpassword=pass -rpcallowip=127.0.0.1/0 -rpcbind=127.0.0.1 -blockfilterindex=1 -peerblockfilters=1`
+//!    `bitcoind -regtest -server -daemon -fallbackfee=0.0002 -rpcuser=admin -rpcpassword=pass
+//! -rpcallowip=127.0.0.1/0 -rpcbind=127.0.0.1 -blockfilterindex=1 -peerblockfilters=1`
 //!
 //! 2. Define a shell alias to `bitcoin-cli`, for example:
 //!
@@ -18,8 +20,8 @@
 //!
 //! 4. Now that you have with the Base64 encoded PSBT:
 //!
-//!    `bt analyzepsbt cHNidP8BAEACAAAAAAIAAAAAAAAAABYAFJf1yVh7sF47WTYWjYsqsoGUbuOsAAAAAAAAAAAOagxCaXRjb2luIEJPU0QAAAAAAAAA`
-//!
+//!    `bt analyzepsbt
+//! cHNidP8BAEACAAAAAAIAAAAAAAAAABYAFJf1yVh7sF47WTYWjYsqsoGUbuOsAAAAAAAAAAAOagxCaXRjb2luIEJPU0QAAAAAAAAA`
 
 use bitcoin::{
     absolute::LockTime,
@@ -43,7 +45,8 @@ fn main() {
     let opreturn_desc = Descriptor::from_bytes(bytes.as_slice()).unwrap();
     let op_return_payload_script = opreturn_desc.to_script();
 
-    // Here we use the is_op_return() method from rust-bitcoin to check if the script is indeed an op_return.
+    // Here we use the is_op_return() method from rust-bitcoin to check if the script is indeed an
+    // op_return.
     assert!(op_return_payload_script.is_op_return());
 
     // This will result in a error since this specific one is an OP_RETURN.

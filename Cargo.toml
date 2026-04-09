@@ -19,6 +19,7 @@ address = ["dep:bitcoin"]
 serde = ["dep:serde"]
 borsh = ["dep:borsh"]
 arbitrary = ["dep:arbitrary"]
+ssz = ["dep:ssz", "dep:ssz_types"]
 
 [dependencies]
 arbitrary = { version = "1.4.2", optional = true }
@@ -29,6 +30,8 @@ secp256k1 = { version = "0.29.1", features = [ # for optimization keep in sync w
   "global-context",
 ] }
 serde = { version = "1.0.228", optional = true }
+ssz = { git = "https://github.com/alpenlabs/ssz-gen", tag = "v0.15.0", package = "ssz", optional = true }
+ssz_types = { git = "https://github.com/alpenlabs/ssz-gen", tag = "v0.15.0", package = "ssz_types", optional = true }
 
 [dev-dependencies]
 bincode = "1.3.3"

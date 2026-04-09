@@ -2,14 +2,13 @@
 
 use core::fmt;
 
-use hex::error::HexToBytesError;
-
-use crate::DescriptorType;
-
 #[cfg(feature = "address")]
 use bitcoin::script::witness_program::Error as WitnessProgramError;
 #[cfg(feature = "address")]
 use bitcoin::secp256k1::Error as Secp256k1Error;
+use hex::error::HexToBytesError;
+
+use crate::DescriptorType;
 
 /// Errors related to [`Descriptor`](crate::Descriptor).
 #[derive(Debug, PartialEq, Eq)]
