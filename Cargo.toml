@@ -30,8 +30,8 @@ secp256k1 = { version = "0.29.1", features = [ # for optimization keep in sync w
   "global-context",
 ] }
 serde = { version = "1.0.228", optional = true }
-ssz = { git = "https://github.com/alpenlabs/ssz-gen", version = "0.15.0", tag = "v0.15.0", package = "ssz", optional = true }
-ssz_types = { git = "https://github.com/alpenlabs/ssz-gen", version = "0.15.0", tag = "v0.15.0", package = "ssz_types", optional = true }
+ssz = { git = "https://github.com/alpenlabs/ssz-gen", version = "0.16.0", tag = "v0.16.0", package = "ssz", optional = true }
+ssz_types = { git = "https://github.com/alpenlabs/ssz-gen", version = "0.16.0", tag = "v0.16.0", package = "ssz_types", optional = true }
 
 [dev-dependencies]
 bincode = "1.3.3"
