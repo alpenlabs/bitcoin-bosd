@@ -23,7 +23,7 @@ ssz = ["dep:ssz", "dep:ssz_types"]
 
 [dependencies]
 arbitrary = { version = "1.4.2", optional = true }
-bitcoin = { version = "0.32.8", optional = true }
+bitcoin = { version = "0.32.9", optional = true }
 borsh = { version = "1.6.1", optional = true }
 hex = { package = "hex-conservative", version = "0.2.1" } # for optimization keep in sync with bitcoin
 secp256k1 = { version = "0.29.1", features = [ # for optimization keep in sync with bitcoin
