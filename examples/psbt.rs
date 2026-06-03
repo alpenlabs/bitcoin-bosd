@@ -89,7 +89,7 @@ fn main() {
     psbt.sign(&get_mock_key().0, &get_mock_key().1).unwrap();
 
     // Prints the signed PSBT as a hex-encoded string.
-    println!("PSBT: {}", &psbt.serialize_hex());
+    println!("PSBT: {}", psbt.serialize_hex());
     println!("NOTE: You need to convert it to base64 in order to check with analyzepsbt bitcoin-cli command.");
 }
 

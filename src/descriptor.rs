@@ -390,7 +390,7 @@ impl Descriptor {
 impl Display for Descriptor {
     fn fmt(&self, f: &mut Formatter) -> std::fmt::Result {
         let type_tag = self.type_tag().to_u8();
-        write!(f, "{}{}", &[type_tag].as_hex(), self.payload.as_hex())
+        write!(f, "{}{}", [type_tag].as_hex(), self.payload.as_hex())
     }
 }
 
